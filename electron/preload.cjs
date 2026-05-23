@@ -4,6 +4,9 @@ contextBridge.exposeInMainWorld('questionApi', {
   loadProjects: () => ipcRenderer.invoke('projects:load'),
   saveProjects: (projects) => ipcRenderer.invoke('projects:save', projects),
   getDataPath: () => ipcRenderer.invoke('app:get-data-path'),
+  minimizeWindow: () => ipcRenderer.invoke('window:minimize'),
+  toggleMaximizeWindow: () => ipcRenderer.invoke('window:toggle-maximize'),
+  closeWindow: () => ipcRenderer.invoke('window:close'),
   showOpenDialog: (options) => ipcRenderer.invoke('dialog:show-open', options),
   showSaveDialog: (options) => ipcRenderer.invoke('dialog:show-save', options),
 })

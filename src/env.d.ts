@@ -24,10 +24,18 @@ interface QuestionApi {
   loadProjects: () => Promise<unknown>
   saveProjects: (projects: unknown) => Promise<{ ok: boolean }>
   getDataPath: () => Promise<string>
+  minimizeWindow: () => Promise<void>
+  toggleMaximizeWindow: () => Promise<void>
+  closeWindow: () => Promise<void>
   showOpenDialog: (options: ElectronOpenDialogOptions) => Promise<ElectronOpenDialogReturnValue>
   showSaveDialog: (options: ElectronSaveDialogOptions) => Promise<ElectronSaveDialogReturnValue>
 }
 
 interface Window {
   questionApi?: QuestionApi
+}
+
+declare module '*.svg' {
+  const src: string
+  export default src
 }
