@@ -5,6 +5,7 @@ const { SqliteStore } = require('./sqliteStore.cjs')
 
 const isDev = !app.isPackaged
 const appTitle = '抽题助手'
+const appIconPath = path.join(__dirname, '..', 'build', 'icon.ico')
 let mainWindow = null
 let store = null
 
@@ -32,6 +33,7 @@ async function createWindow() {
     minWidth: 1100,
     minHeight: 760,
     title: appTitle,
+    icon: appIconPath,
     frame: false,
     backgroundColor: '#ffffff',
     webPreferences: {
