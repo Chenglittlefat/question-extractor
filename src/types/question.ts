@@ -1,5 +1,5 @@
 export type BaseQuestionType = 'single' | 'multiple' | 'trueFalse' | 'shortAnswer'
-export type ThemeName = 'monochrome' | 'colorful'
+export type ThemeName = 'monochrome' | 'colorful' | 'gaussian-blur'
 export type ActivityStatus = 'idle' | 'running' | 'paused' | 'finished'
 export type ImportEncoding = 'auto' | 'utf-8' | 'utf-16le' | 'utf-16be' | 'gb18030'
 
