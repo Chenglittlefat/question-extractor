@@ -15,6 +15,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
+  back: []
   start: []
   finish: []
   pause: []
@@ -29,6 +30,7 @@ const emit = defineEmits<{
   <section class="activity-panel">
     <div class="activity-header">
       <div>
+        <button v-if="activity.status !== 'idle'" class="icon-button" type="button" title="返回项目" @click="emit('back')">←</button>
         <h2>活动运行</h2>
         <p>{{ selectedQuestionsCount }} 道题已进入抽取池</p>
       </div>

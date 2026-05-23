@@ -7,6 +7,7 @@ import AppTopbar from './components/AppTopbar.vue'
 import CountdownPanel from './components/CountdownPanel.vue'
 import DifficultyPanel from './components/DifficultyPanel.vue'
 import ImportPanel from './components/ImportPanel.vue'
+import ProjectHome from './components/ProjectHome.vue'
 import ProjectPanel from './components/ProjectPanel.vue'
 import QuestionManagePanel from './components/QuestionManagePanel.vue'
 import QuestionTypePanel from './components/QuestionTypePanel.vue'
@@ -22,6 +23,8 @@ import type {
   QuestionOption,
   QuestionTypeConfig,
 } from './types/question'
+
+type AppView = 'home' | 'workspace' | 'activity'
 
 const baseTypeLabels: Record<BaseQuestionType, string> = {
   single: '单选题',
@@ -102,6 +105,7 @@ const normalizeProjects = (value: unknown): Project[] => {
 const projects = ref<Project[]>([makeProject()])
 const activeProjectId = ref(projects.value[0]?.id ?? '')
 const activeTab = ref<TabId>('project')
+const activeView = ref<AppView>('home')
 const notice = ref('项目正在载入，本机 SQLite 会保存所有项目数据。')
 const isHydrated = ref(false)
 const dataPath = ref('')
@@ -222,8 +226,27 @@ function createProject() {
   projects.value.unshift(nextProject)
   activeProjectId.value = nextProject.id
   activeTab.value = 'project'
+  activeView.value = 'workspace'
   resetActivity()
   notice.value = '已创建新项目。'
+}
+
+function openProject(id: string) {
+  activeProjectId.value = id
+  activeTab.value = 'project'
+  activeView.value = 'workspace'
+  resetActivity()
+}
+
+function backHome() {
+  resetActivity()
+  activeView.value = 'home'
+}
+
+function openSettings() {
+  activeProjectId.value = project.value.id
+  activeTab.value = 'settings'
+  activeView.value = 'workspace'
 }
 
 function deleteProject(id: string) {
@@ -571,6 +594,7 @@ function startActivity() {
   activity.startedAt = now()
   activity.finishedAt = ''
   drawNextQuestion()
+  activeView.value = 'activity'
 }
 
 function drawNextQuestion() {
@@ -632,6 +656,7 @@ function finishActivity() {
   activity.status = 'finished'
   activity.finishedAt = now()
   activity.currentQuestionId = ''
+  activeView.value = 'activity'
 }
 
 function resetActivity() {
@@ -781,7 +806,38 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="app-shell">
+  <ProjectHome
+    v-if="activeView === 'home'"
+    :projects="projects"
+    @create-project="createProject"
+    @delete-project="deleteProject"
+    @open-project="openProject"
+    @open-settings="openSettings"
+  />
+
+  <ActivityPanel
+    v-else-if="activeView === 'activity'"
+    :activity="activity"
+    :activity-progress="activityProgress"
+    :answer-text="answerText"
+    :completed-questions="completedQuestions"
+    :current-question="currentQuestion"
+    :elapsed-time="elapsedTime"
+    :format-date="formatDate"
+    :format-timer="formatTimer"
+    :selected-questions-count="selectedQuestions.length"
+    :timer-dash-offset="timerDashOffset"
+    @back="activeView = 'workspace'"
+    @finish="finishActivity"
+    @next="drawNextQuestion"
+    @pause="pauseTimer"
+    @reset="resetTimer"
+    @resume="resumeTimer"
+    @reveal="revealAnswer"
+    @start="startActivity"
+  />
+
+  <div v-else class="app-shell">
     <AppSidebar
       v-model:active-project-id="activeProjectId"
       v-model:active-tab="activeTab"
@@ -793,7 +849,16 @@ onMounted(async () => {
     />
 
     <main class="workspace">
-      <AppTopbar :notice="notice" :project="project" @delete-project="deleteProject" @export-backup="exportBackup" @save="touchProject()" />
+      <AppTopbar
+        :notice="notice"
+        :project="project"
+        :selected-questions-count="selectedQuestions.length"
+        @back-home="backHome"
+        @delete-project="deleteProject"
+        @export-backup="exportBackup"
+        @save="touchProject()"
+        @start-activity="startActivity"
+      />
 
       <ProjectPanel
         v-if="activeTab === 'project'"
@@ -868,6 +933,7 @@ onMounted(async () => {
         :format-timer="formatTimer"
         :selected-questions-count="selectedQuestions.length"
         :timer-dash-offset="timerDashOffset"
+        @back="activeTab = 'project'"
         @finish="finishActivity"
         @next="drawNextQuestion"
         @pause="pauseTimer"

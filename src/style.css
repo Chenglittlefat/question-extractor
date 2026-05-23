@@ -42,7 +42,7 @@
 
 body {
   margin: 0;
-  min-width: 1080px;
+  min-width: 0;
   background: var(--bg);
 }
 
@@ -147,8 +147,148 @@ h3 {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 176px minmax(0, 1fr);
   min-height: 100vh;
+}
+
+.home-shell {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.home-brand,
+.home-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-main {
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+
+.home-title {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.home-title p,
+.home-title span,
+.project-tile p,
+.project-tile-meta,
+.project-tile-tags span {
+  color: var(--muted);
+}
+
+.home-empty {
+  display: grid;
+  min-height: 360px;
+  place-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.project-tile {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  min-height: 170px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.project-tile:hover {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.project-tile-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.project-tile h2 {
+  overflow: hidden;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-tile p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.icon-button,
+.icon-danger {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+}
+
+.icon-danger {
+  color: var(--danger);
+}
+
+.project-tile-meta,
+.project-tile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.project-tile-tags {
+  gap: 6px;
+}
+
+.project-tile-tags span,
+.ready-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 12px;
 }
 
 .sidebar {
@@ -156,8 +296,8 @@ h3 {
   top: 0;
   height: 100vh;
   border-right: 1px solid var(--border);
-  background: var(--surface);
-  padding: 22px;
+  background: var(--panel);
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -260,7 +400,7 @@ nav button.active .nav-icon {
 
 .topbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
   margin-bottom: 20px;
@@ -269,8 +409,24 @@ nav button.active .nav-icon {
 }
 
 .topbar p {
-  margin-top: 7px;
+  margin-top: 5px;
   max-width: 840px;
+}
+
+.topbar-title {
+  display: grid;
+  grid-template-columns: 34px minmax(0, auto);
+  gap: 0 10px;
+  align-items: center;
+}
+
+.topbar-title p {
+  grid-column: 2;
+}
+
+.topbar-title h1 {
+  display: inline;
+  margin-right: 10px;
 }
 
 .top-actions,
@@ -306,6 +462,20 @@ nav button.active .nav-icon {
 
 .section-title p {
   margin-top: 7px;
+}
+
+.activity-panel {
+  min-height: 100vh;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.workspace .activity-panel {
+  min-height: 620px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
 }
 
 .overview-grid {
