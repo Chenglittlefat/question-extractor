@@ -40,6 +40,7 @@
       "packagerConfig": {
         "name": "QuestionExtractor",
         "executableName": "question-extractor",
+        "icon": "build/icon",
         "ignore": [
           "^/(\\.git|\\.github|\\.idea|out|propmts|public|src)(/|$)",
           "^/(README\\.md|tsconfig.*\\.json|vite\\.config\\.ts)$",
