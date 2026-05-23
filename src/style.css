@@ -64,11 +64,11 @@
 
 :root[data-theme='colorful'] {
   --bg: #f8fafc;
-  --surface: #eef6ff;
+  --surface: #f1f5f9;
   --panel: #ffffff;
   --text: #0f172a;
   --muted: #64748b;
-  --border: #c7ddff;
+  --border: rgba(37, 99, 235, 0.18);
   --primary: #2563eb;
   --primary-text: #ffffff;
   --danger: #dc2626;
@@ -84,6 +84,13 @@
 body {
   margin: 0;
   min-width: 0;
+  background: var(--bg);
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
   background: var(--bg);
 }
 
@@ -535,6 +542,24 @@ nav button.active .nav-icon {
 .settings-view {
   min-height: 100vh;
   background: var(--bg);
+}
+
+:root[data-theme='colorful'] .settings-view,
+:root[data-theme='colorful'] .home-shell,
+:root[data-theme='colorful'] .activity-view,
+:root[data-theme='colorful'] .finish-view,
+:root[data-theme='colorful'] .workspace {
+  background:
+    linear-gradient(180deg, rgba(239, 246, 255, 0.9) 0%, rgba(248, 250, 252, 1) 360px),
+    var(--bg);
+}
+
+:root[data-theme='colorful'] .figma-header,
+:root[data-theme='colorful'] .home-header,
+:root[data-theme='colorful'] .topbar,
+:root[data-theme='colorful'] .sidebar {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(37, 99, 235, 0.16);
 }
 
 .activity-top-progress {
