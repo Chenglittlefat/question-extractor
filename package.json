@@ -11,6 +11,7 @@
     "web:dev": "vite --host 127.0.0.1",
     "build": "vue-tsc -b && vite build",
     "start": "electron .",
+    "package": "npm run build && electron-forge package",
     "make": "npm run build && electron-forge make",
     "preview": "vite preview"
   },
