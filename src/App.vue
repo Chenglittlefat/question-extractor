@@ -98,9 +98,117 @@ const makeProject = (name = '我的抽题活动', description = '用于课堂、
   }
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
+
+const normalizeString = (value: unknown, fallback = '') => (typeof value === 'string' ? value : fallback)
+const normalizeBoolean = (value: unknown, fallback: boolean) => (typeof value === 'boolean' ? value : fallback)
+const normalizeStringArray = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [])
+
+const normalizeQuestion = (value: unknown, fallbackType: QuestionTypeConfig, fallbackDifficulty: DifficultyConfig): Question | null => {
+  if (!isRecord(value)) return null
+  const timestamp = now()
+  const baseType = ['single', 'multiple', 'trueFalse', 'shortAnswer'].includes(String(value.baseType))
+    ? (value.baseType as BaseQuestionType)
+    : fallbackType.baseType
+  const rawOptions = Array.isArray(value.options) ? value.options : []
+  const options = rawOptions
+    .filter(isRecord)
+    .map((option, index) => ({
+      id: normalizeString(option.id, uid('option')),
+      label: typeof option.label === 'string' ? option.label : undefined,
+      content: normalizeString(option.content),
+      order: typeof option.order === 'number' ? option.order : index + 1,
+    }))
+  const rawAnswer = value.answer
+  const answer = Array.isArray(rawAnswer) ? rawAnswer.map(String) : normalizeString(rawAnswer)
+  return {
+    id: normalizeString(value.id, uid('question')),
+    customTypeId: normalizeString(value.customTypeId, fallbackType.id),
+    customTypeName: normalizeString(value.customTypeName, fallbackType.name),
+    baseType,
+    difficultyId: normalizeString(value.difficultyId, fallbackDifficulty.id),
+    difficultyName: normalizeString(value.difficultyName, fallbackDifficulty.name),
+    content: normalizeString(value.content),
+    options,
+    answer,
+    analysis: normalizeString(value.analysis),
+    tags: normalizeStringArray(value.tags),
+    remark: normalizeString(value.remark),
+    enabled: normalizeBoolean(value.enabled, true),
+    selected: normalizeBoolean(value.selected, true),
+    createdAt: normalizeString(value.createdAt, timestamp),
+    updatedAt: normalizeString(value.updatedAt, timestamp),
+  }
+}
+
+const normalizeProject = (value: unknown): Project | null => {
+  if (!isRecord(value)) return null
+  const fallback = makeProject(normalizeString(value.name, '我的抽题活动'), normalizeString(value.description))
+  const questionTypes = (Array.isArray(value.questionTypes) ? value.questionTypes : [])
+    .filter(isRecord)
+    .map((item, index) => ({
+      id: normalizeString(item.id, uid('type')),
+      name: normalizeString(item.name, `题型 ${index + 1}`),
+      baseType: ['single', 'multiple', 'trueFalse', 'shortAnswer'].includes(String(item.baseType)) ? (item.baseType as BaseQuestionType) : 'single',
+      enabled: normalizeBoolean(item.enabled, true),
+      difficultyIds: normalizeStringArray(item.difficultyIds),
+      countdownSeconds: typeof item.countdownSeconds === 'number' ? item.countdownSeconds : 30,
+      createdAt: normalizeString(item.createdAt, fallback.createdAt),
+      updatedAt: normalizeString(item.updatedAt, fallback.updatedAt),
+    }))
+  const difficulties = (Array.isArray(value.difficulties) ? value.difficulties : [])
+    .filter(isRecord)
+    .map((item, index) => ({
+      id: normalizeString(item.id, uid('difficulty')),
+      name: normalizeString(item.name, `难度 ${index + 1}`),
+      order: typeof item.order === 'number' ? item.order : index + 1,
+      enabled: normalizeBoolean(item.enabled, true),
+      createdAt: normalizeString(item.createdAt, fallback.createdAt),
+      updatedAt: normalizeString(item.updatedAt, fallback.updatedAt),
+    }))
+  const migratedTypes = questionTypes.length ? questionTypes : fallback.questionTypes
+  const migratedDifficulties = difficulties.length ? difficulties : fallback.difficulties
+  const fallbackType = migratedTypes[0] ?? fallback.questionTypes[0]
+  const fallbackDifficulty = migratedDifficulties[0] ?? fallback.difficulties[0]
+  const questions = (Array.isArray(value.questions) ? value.questions : [])
+    .map((item) => normalizeQuestion(item, fallbackType, fallbackDifficulty))
+    .filter((item): item is Question => Boolean(item))
+  const activitySettings = isRecord(value.activitySettings) ? value.activitySettings : {}
+  const soundConfig = isRecord(value.soundConfig) ? value.soundConfig : {}
+  const themeConfig = isRecord(value.themeConfig) ? value.themeConfig : {}
+  return {
+    id: normalizeString(value.id, fallback.id),
+    name: normalizeString(value.name, fallback.name),
+    description: normalizeString(value.description, fallback.description),
+    questionTypes: migratedTypes,
+    difficulties: migratedDifficulties,
+    questions,
+    activitySettings: {
+      randomMode: 'random',
+      allowRepeat: normalizeBoolean(activitySettings.allowRepeat, false),
+      selectedQuestionIds: normalizeStringArray(activitySettings.selectedQuestionIds),
+    },
+    soundConfig: {
+      id: normalizeString(soundConfig.id, fallback.soundConfig.id),
+      name: normalizeString(soundConfig.name, fallback.soundConfig.name),
+      type: soundConfig.type === 'custom' ? 'custom' : 'default',
+      fileName: normalizeString(soundConfig.fileName) || undefined,
+      volume: typeof soundConfig.volume === 'number' ? soundConfig.volume : fallback.soundConfig.volume,
+      loop: normalizeBoolean(soundConfig.loop, fallback.soundConfig.loop),
+    },
+    themeConfig: {
+      currentTheme: themeConfig.currentTheme === 'colorful' ? 'colorful' : 'monochrome',
+      defaultTheme: themeConfig.defaultTheme === 'colorful' ? 'colorful' : 'monochrome',
+    },
+    createdAt: normalizeString(value.createdAt, fallback.createdAt),
+    updatedAt: normalizeString(value.updatedAt, fallback.updatedAt),
+  }
+}
+
 const normalizeProjects = (value: unknown): Project[] => {
   if (!Array.isArray(value) || !value.length) return [makeProject()]
-  return value as Project[]
+  const normalized = value.map(normalizeProject).filter((item): item is Project => Boolean(item))
+  return normalized.length ? normalized : [makeProject()]
 }
 
 const projects = ref<Project[]>([makeProject()])
@@ -403,10 +511,13 @@ function confirmImport() {
 }
 
 function parseQuestionTable(text: string, delimiter: ',' | '\t'): ImportRow[] {
-  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter((line) => line.trim())
-  const headers = splitDelimitedLine(lines[0] ?? '', delimiter)
-  const rows = lines.slice(1)
-  return rows.map((line, index) => buildImportRow(splitDelimitedLine(line, delimiter), headers, index + 2))
+  const workbook = XLSX.read(text.replace(/^\uFEFF/, ''), { type: 'string', FS: delimiter })
+  const firstSheet = workbook.SheetNames[0]
+  if (!firstSheet) return []
+  const sheet = workbook.Sheets[firstSheet]
+  const table = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: '', blankrows: false, raw: false })
+  const [headers = [], ...rows] = table.map((row) => row.map((cell) => String(cell ?? '')))
+  return rows.map((row, index) => buildImportRow(row, headers, index + 2))
 }
 
 async function parseWorkbookFile(file: File): Promise<ImportRow[]> {
@@ -434,14 +545,14 @@ function buildImportRow(values: string[], headers: string[], rowNumber: number):
 
   const rawOptions = collectOptions(values, headers, valueOf('选项'))
   const answer = parseAnswer(valueOf('正确答案'), type?.baseType)
+  const answers = Array.isArray(answer) ? answer : [answer]
   if (type && type.baseType !== 'shortAnswer' && type.baseType !== 'trueFalse' && rawOptions.length < 2) errors.push('单选/多选题至少需要 2 个选项')
-  if (type?.baseType === 'single' && Array.isArray(answer) && answer.length !== 1) errors.push('单选题只能有 1 个正确答案')
+  if (type?.baseType === 'single' && answers.length !== 1) errors.push('单选题只能有 1 个正确答案')
   if (type?.baseType === 'multiple' && (!Array.isArray(answer) || answer.length < 1)) errors.push('多选题至少需要 1 个正确答案')
   if (type?.baseType === 'trueFalse' && !['正确', '错误', '是', '否', 'true', 'false'].includes(answerText(answer).toLowerCase())) errors.push('判断题答案不合法')
   if (type?.baseType === 'shortAnswer' && !answerText(answer)) errors.push('简答题答案不能为空')
 
   const optionTexts = rawOptions.map((item) => item.content)
-  const answers = Array.isArray(answer) ? answer : [answer]
   if (type && ['single', 'multiple'].includes(type.baseType)) {
     const missing = answers.filter((item) => !optionTexts.includes(item) && !rawOptions.some((option) => option.label === item))
     if (missing.length) errors.push(`正确答案不在选项中：${missing.join('、')}`)
@@ -458,7 +569,7 @@ function buildImportRow(values: string[], headers: string[], rowNumber: number):
           difficultyName: difficulty.name,
           content,
           options: rawOptions,
-          answer,
+          answer: type.baseType === 'single' ? answers[0] ?? '' : answer,
           analysis: valueOf('解析'),
           tags: splitList(valueOf('标签')),
           remark: valueOf('备注'),
@@ -505,7 +616,7 @@ function parseAnswer(input: string, baseType?: BaseQuestionType): string | strin
     }
     return splitList(normalized)
   }
-  if (baseType === 'single') return splitList(normalized)[0] ?? normalized
+  if (baseType === 'single') return splitList(normalized)
   return normalized
 }
 
@@ -514,29 +625,6 @@ function splitList(value: string) {
     .split(/[;；、|]/)
     .map((item) => item.trim())
     .filter(Boolean)
-}
-
-function splitDelimitedLine(line: string, delimiter: ',' | '\t') {
-  const result: string[] = []
-  let current = ''
-  let quoted = false
-  for (let index = 0; index < line.length; index += 1) {
-    const char = line[index]
-    const next = line[index + 1]
-    if (char === '"' && next === '"') {
-      current += '"'
-      index += 1
-    } else if (char === '"') {
-      quoted = !quoted
-    } else if (char === delimiter && !quoted) {
-      result.push(current)
-      current = ''
-    } else {
-      current += char
-    }
-  }
-  result.push(current)
-  return result
 }
 
 async function readTextFile(file: File, encoding: ImportEncoding) {
@@ -738,9 +826,10 @@ function exportBackup() {
 
 async function importBackupFile(file: File) {
   try {
-    const backup = JSON.parse(await file.text()) as { project?: Project }
-    if (!backup.project?.id) throw new Error('Invalid backup')
-    const incoming = backup.project
+    const backup = JSON.parse(await file.text()) as { project?: unknown }
+    if (!isRecord(backup.project) || !normalizeString(backup.project.id)) throw new Error('Invalid backup')
+    const incoming = normalizeProject(backup.project)
+    if (!incoming) throw new Error('Invalid backup')
     if (projects.value.some((item) => item.id === incoming.id)) incoming.id = uid('project')
     projects.value.unshift(incoming)
     activeProjectId.value = incoming.id
