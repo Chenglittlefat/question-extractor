@@ -223,6 +223,7 @@ const typeDraft = reactive({ name: '', baseType: 'single' as BaseQuestionType, c
 const difficultyDraft = reactive({ name: '' })
 const importEncoding = ref<ImportEncoding>('auto')
 const importRows = ref<ImportRow[]>([])
+const importBatch = ref(0)
 const filters = reactive({ keyword: '', typeId: 'all', difficultyId: 'all', selected: 'all', enabled: 'all', tag: '' })
 const customSoundUrl = ref('')
 const customSound = ref<HTMLAudioElement | null>(null)
@@ -487,6 +488,8 @@ async function handleImportFile(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  importRows.value = []
+  importBatch.value += 1
   if (file.name.endsWith('.json')) {
     await importBackupFile(file)
     input.value = ''
@@ -1031,6 +1034,7 @@ onMounted(async () => {
 
       <ImportPanel
         v-if="activeTab === 'import'"
+        :import-batch="importBatch"
         v-model:import-encoding="importEncoding"
         :import-rows="importRows"
         :import-valid-count="importValidCount"

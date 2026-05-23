@@ -4,6 +4,7 @@ import { icons } from '../assets/icons'
 import SvgIcon from './SvgIcon.vue'
 
 defineProps<{
+  importBatch: number
   importEncoding: ImportEncoding
   importRows: ImportRow[]
   importValidCount: number
@@ -40,7 +41,7 @@ const emit = defineEmits<{
       <button :disabled="!importValidCount" type="button" @click="emit('confirmImport')">确认导入 {{ importValidCount }} 道</button>
     </div>
     <div v-if="importRows.length" class="import-preview">
-      <div v-for="row in importRows" :key="row.row" :class="['preview-row', { invalid: row.errors.length }]">
+      <div v-for="row in importRows" :key="`${importBatch}-${row.row}-${row.question?.id ?? 'invalid'}`" :class="['preview-row', { invalid: row.errors.length }]">
         <strong>第 {{ row.row }} 行</strong>
         <span>{{ row.question?.content || '未生成题目' }}</span>
         <small>{{ row.errors.length ? row.errors.join('；') : '校验通过' }}</small>
