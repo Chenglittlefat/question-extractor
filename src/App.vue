@@ -1,91 +1,27 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import * as XLSX from 'xlsx'
-
-type BaseQuestionType = 'single' | 'multiple' | 'trueFalse' | 'shortAnswer'
-type ThemeName = 'monochrome' | 'colorful'
-type ActivityStatus = 'idle' | 'running' | 'paused' | 'finished'
-type ImportEncoding = 'auto' | 'utf-8' | 'utf-16le' | 'utf-16be' | 'gb18030'
-
-interface QuestionTypeConfig {
-  id: string
-  name: string
-  baseType: BaseQuestionType
-  enabled: boolean
-  difficultyIds: string[]
-  countdownSeconds: number
-  createdAt: string
-  updatedAt: string
-}
-
-interface DifficultyConfig {
-  id: string
-  name: string
-  order: number
-  enabled: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-interface QuestionOption {
-  id: string
-  label?: string
-  content: string
-  order: number
-}
-
-interface Question {
-  id: string
-  customTypeId: string
-  customTypeName: string
-  baseType: BaseQuestionType
-  difficultyId: string
-  difficultyName: string
-  content: string
-  options: QuestionOption[]
-  answer: string | string[]
-  analysis?: string
-  tags: string[]
-  remark?: string
-  enabled: boolean
-  selected: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-interface Project {
-  id: string
-  name: string
-  description: string
-  questionTypes: QuestionTypeConfig[]
-  difficulties: DifficultyConfig[]
-  questions: Question[]
-  activitySettings: {
-    randomMode: 'random'
-    allowRepeat: boolean
-    selectedQuestionIds: string[]
-  }
-  soundConfig: {
-    id: string
-    name: string
-    type: 'default' | 'custom'
-    fileName?: string
-    volume: number
-    loop: boolean
-  }
-  themeConfig: {
-    currentTheme: ThemeName
-    defaultTheme: ThemeName
-  }
-  createdAt: string
-  updatedAt: string
-}
-
-interface ImportRow {
-  row: number
-  question?: Question
-  errors: string[]
-}
+import ActivityPanel from './components/ActivityPanel.vue'
+import AppSidebar from './components/AppSidebar.vue'
+import AppTopbar from './components/AppTopbar.vue'
+import CountdownPanel from './components/CountdownPanel.vue'
+import DifficultyPanel from './components/DifficultyPanel.vue'
+import ImportPanel from './components/ImportPanel.vue'
+import ProjectPanel from './components/ProjectPanel.vue'
+import QuestionManagePanel from './components/QuestionManagePanel.vue'
+import QuestionTypePanel from './components/QuestionTypePanel.vue'
+import SettingsPanel from './components/SettingsPanel.vue'
+import type {
+  ActivityStatus,
+  BaseQuestionType,
+  DifficultyConfig,
+  ImportEncoding,
+  ImportRow,
+  Project,
+  Question,
+  QuestionOption,
+  QuestionTypeConfig,
+} from './types/question'
 
 const baseTypeLabels: Record<BaseQuestionType, string> = {
   single: '单选题',
@@ -95,14 +31,14 @@ const baseTypeLabels: Record<BaseQuestionType, string> = {
 }
 
 const tabs = [
-  { id: 'project', label: '项目信息' },
-  { id: 'types', label: '题型设置' },
-  { id: 'difficulties', label: '难度设置' },
-  { id: 'countdown', label: '倒计时' },
-  { id: 'import', label: '题目导入' },
-  { id: 'questions', label: '题目管理' },
-  { id: 'activity', label: '活动运行' },
-  { id: 'settings', label: '设置备份' },
+  { id: 'project', label: '项目信息', icon: '⌂' },
+  { id: 'types', label: '题型设置', icon: '+' },
+  { id: 'difficulties', label: '难度设置', icon: '≡' },
+  { id: 'countdown', label: '倒计时', icon: '◷' },
+  { id: 'import', label: '题目导入', icon: '↑' },
+  { id: 'questions', label: '题目管理', icon: '☑' },
+  { id: 'activity', label: '活动运行', icon: '▶' },
+  { id: 'settings', label: '设置备份', icon: '⚙' },
 ] as const
 
 type TabId = (typeof tabs)[number]['id']
@@ -216,6 +152,45 @@ const filteredQuestions = computed(() => {
     return matchesKeyword && matchesTag && matchesType && matchesDifficulty && matchesSelected && matchesEnabled
   })
 })
+
+const selectedQuestionRate = computed(() => {
+  if (!project.value.questions.length) return 0
+  return Math.round((selectedQuestions.value.length / project.value.questions.length) * 100)
+})
+
+const importReady = computed(
+  () => enabledTypes.value.length > 0 && enabledDifficulties.value.length > 0 && project.value.name.trim().length > 0,
+)
+
+const activityReadyItems = computed(() => [
+  { label: '项目名称', ready: project.value.name.trim().length > 0 },
+  { label: '启用题型', ready: enabledTypes.value.length > 0 },
+  { label: '启用难度', ready: enabledDifficulties.value.length > 0 },
+  { label: '已选题目', ready: selectedQuestions.value.length > 0 },
+])
+
+const activityProgress = computed(() => {
+  const total = activity.completedQuestionIds.length + activity.remainingQuestionIds.length
+  if (!total) return 0
+  return Math.round((activity.completedQuestionIds.length / total) * 100)
+})
+
+const currentCountdownTotal = computed(() => {
+  const type = project.value.questionTypes.find((item) => item.id === currentQuestion.value?.customTypeId)
+  return Math.max(1, type?.countdownSeconds ?? activity.currentCountdownSeconds ?? 30)
+})
+
+const timerDashOffset = computed(() => {
+  const circumference = 339.292
+  const ratio = Math.max(0, Math.min(1, activity.currentCountdownSeconds / currentCountdownTotal.value))
+  return circumference * (1 - ratio)
+})
+
+const completedQuestions = computed(() =>
+  activity.completedQuestionIds
+    .map((id) => project.value.questions.find((question) => question.id === id))
+    .filter((question): question is Question => Boolean(question)),
+)
 
 watch(
   projects,
@@ -807,347 +782,111 @@ onMounted(async () => {
 
 <template>
   <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <span class="mark">Q</span>
-        <div>
-          <strong>抽题工作台</strong>
-          <small>离线活动管理</small>
-        </div>
-      </div>
-
-      <label class="field">
-        <span>当前项目</span>
-        <select v-model="activeProjectId" @change="resetActivity">
-          <option v-for="item in projects" :key="item.id" :value="item.id">{{ item.name }}</option>
-        </select>
-      </label>
-
-      <button class="primary full" type="button" @click="createProject">新建项目</button>
-
-      <nav>
-        <button
-          v-for="tab in tabs"
-          :key="tab.id"
-          type="button"
-          :class="{ active: activeTab === tab.id }"
-          @click="activeTab = tab.id"
-        >
-          {{ tab.label }}
-        </button>
-      </nav>
-    </aside>
+    <AppSidebar
+      v-model:active-project-id="activeProjectId"
+      v-model:active-tab="activeTab"
+      :data-path="dataPath"
+      :projects="projects"
+      :tabs="tabs"
+      @create-project="createProject"
+      @project-changed="resetActivity"
+    />
 
     <main class="workspace">
-      <header class="topbar">
-        <div>
-          <h1>{{ project.name }}</h1>
-          <p>{{ notice }}</p>
-        </div>
-        <div class="top-actions">
-          <button type="button" @click="touchProject()">保存</button>
-          <button type="button" @click="exportBackup">导出备份</button>
-          <button class="danger" type="button" @click="deleteProject(project.id)">删除项目</button>
-        </div>
-      </header>
+      <AppTopbar :notice="notice" :project="project" @delete-project="deleteProject" @export-backup="exportBackup" @save="touchProject()" />
 
-      <section v-if="activeTab === 'project'" class="panel">
-        <div class="section-title">
-          <h2>项目配置</h2>
-          <p>基础信息会随题型、题库、主题和音效一起保存。</p>
-        </div>
-        <div class="form-grid">
-          <label class="field">
-            <span>项目名称</span>
-            <input v-model.trim="project.name" type="text" @change="touchProject('已更新项目名称。')" />
-          </label>
-          <label class="field">
-            <span>创建时间</span>
-            <input :value="formatDate(project.createdAt)" type="text" readonly />
-          </label>
-          <label class="field wide">
-            <span>项目描述</span>
-            <textarea v-model.trim="project.description" rows="4" @change="touchProject('已更新项目描述。')" />
-          </label>
-        </div>
-        <div class="stats">
-          <strong>{{ project.questionTypes.length }}</strong><span>题型</span>
-          <strong>{{ project.difficulties.length }}</strong><span>难度</span>
-          <strong>{{ project.questions.length }}</strong><span>题目</span>
-          <strong>{{ selectedQuestions.length }}</strong><span>参与抽取</span>
-        </div>
-      </section>
+      <ProjectPanel
+        v-if="activeTab === 'project'"
+        :activity-ready-items="activityReadyItems"
+        :import-ready="importReady"
+        :project="project"
+        :selected-question-rate="selectedQuestionRate"
+        :selected-questions-count="selectedQuestions.length"
+        @touch="touchProject"
+      />
 
-      <section v-if="activeTab === 'types'" class="panel">
-        <div class="section-title">
-          <h2>题型设置</h2>
-          <p>展示名称可自定义，业务规则仍绑定到基础题型。</p>
-        </div>
-        <div class="inline-form">
-          <input v-model.trim="typeDraft.name" type="text" placeholder="自定义题型名称" />
-          <select v-model="typeDraft.baseType">
-            <option v-for="(label, value) in baseTypeLabels" :key="value" :value="value">{{ label }}</option>
-          </select>
-          <input v-model.number="typeDraft.countdownSeconds" min="5" max="3600" type="number" />
-          <button class="primary" type="button" @click="addType">新增题型</button>
-        </div>
-        <div class="table">
-          <div class="table-row head">
-            <span>启用</span><span>题型名称</span><span>基础题型</span><span>可用难度</span><span>倒计时</span><span>操作</span>
-          </div>
-          <div v-for="item in project.questionTypes" :key="item.id" class="table-row">
-            <label><input v-model="item.enabled" type="checkbox" @change="touchProject('已更新题型状态。')" /></label>
-            <input v-model.trim="item.name" type="text" @change="touchProject('已更新题型名称。')" />
-            <select v-model="item.baseType" @change="touchProject('已更新基础题型。')">
-              <option v-for="(label, value) in baseTypeLabels" :key="value" :value="value">{{ label }}</option>
-            </select>
-            <div class="chips">
-              <label v-for="difficulty in project.difficulties" :key="difficulty.id" class="chip">
-                <input
-                  :checked="item.difficultyIds.includes(difficulty.id)"
-                  type="checkbox"
-                  @change="toggleTypeDifficulty(item, difficulty.id)"
-                />
-                {{ difficulty.name }}
-              </label>
-            </div>
-            <input
-              v-model.number="item.countdownSeconds"
-              min="5"
-              max="3600"
-              type="number"
-              @change="touchProject('已更新题型倒计时。')"
-            />
-            <button type="button" @click="removeType(item.id)">删除</button>
-          </div>
-        </div>
-      </section>
+      <QuestionTypePanel
+        v-if="activeTab === 'types'"
+        :base-type-labels="baseTypeLabels"
+        :project="project"
+        :type-draft="typeDraft"
+        @add-type="addType"
+        @remove-type="removeType"
+        @toggle-difficulty="toggleTypeDifficulty"
+        @touch="touchProject"
+      />
 
-      <section v-if="activeTab === 'difficulties'" class="panel">
-        <div class="section-title">
-          <h2>难度设置</h2>
-          <p>难度可排序，导入题目时必须匹配已有难度。</p>
-        </div>
-        <div class="inline-form">
-          <input v-model.trim="difficultyDraft.name" type="text" placeholder="难度名称" />
-          <button class="primary" type="button" @click="addDifficulty">新增难度</button>
-        </div>
-        <div class="list">
-          <div v-for="(item, index) in project.difficulties" :key="item.id" class="list-item">
-            <label><input v-model="item.enabled" type="checkbox" @change="touchProject('已更新难度状态。')" /> 启用</label>
-            <input v-model.trim="item.name" type="text" @change="touchProject('已更新难度名称。')" />
-            <span>排序 {{ item.order }}</span>
-            <button type="button" @click="moveDifficulty(index, -1)">上移</button>
-            <button type="button" @click="moveDifficulty(index, 1)">下移</button>
-            <button type="button" @click="removeDifficulty(item.id)">删除</button>
-          </div>
-        </div>
-      </section>
+      <DifficultyPanel
+        v-if="activeTab === 'difficulties'"
+        :difficulty-draft="difficultyDraft"
+        :project="project"
+        @add-difficulty="addDifficulty"
+        @move-difficulty="moveDifficulty"
+        @remove-difficulty="removeDifficulty"
+        @touch="touchProject"
+      />
 
-      <section v-if="activeTab === 'countdown'" class="panel">
-        <div class="section-title">
-          <h2>倒计时配置</h2>
-          <p>每种自定义题型拥有独立倒计时，活动抽题后自动读取。</p>
-        </div>
-        <div class="countdown-grid">
-          <label v-for="item in project.questionTypes" :key="item.id" class="count-card">
-            <span>{{ item.name }}</span>
-            <small>{{ baseTypeLabels[item.baseType] }}</small>
-            <input
-              v-model.number="item.countdownSeconds"
-              min="5"
-              max="3600"
-              type="number"
-              @change="touchProject('已保存倒计时配置。')"
-            />
-          </label>
-        </div>
-      </section>
+      <CountdownPanel
+        v-if="activeTab === 'countdown'"
+        :base-type-labels="baseTypeLabels"
+        :project="project"
+        @touch="touchProject"
+      />
 
-      <section v-if="activeTab === 'import'" class="panel">
-        <div class="section-title">
-          <h2>题目导入</h2>
-          <p>支持 CSV/TSV 表格、UTF-8/UTF-16 文本识别和 JSON 备份恢复。</p>
-        </div>
-        <div class="toolbar">
-          <button class="primary" type="button" @click="exportTemplate">生成导入模板</button>
-          <label class="file-button">
-            导入题目或备份
-            <input accept=".csv,.tsv,.json,.xlsx,.xls" type="file" @change="handleImportFile" />
-          </label>
-          <select v-model="importEncoding">
-            <option value="auto">自动识别编码</option>
-            <option value="utf-8">UTF-8</option>
-            <option value="utf-16le">UTF-16LE</option>
-            <option value="utf-16be">UTF-16BE</option>
-            <option value="gb18030">GBK / GB18030</option>
-          </select>
-          <button :disabled="!importValidCount" type="button" @click="confirmImport">确认导入 {{ importValidCount }} 道</button>
-        </div>
-        <div v-if="importRows.length" class="import-preview">
-          <div v-for="row in importRows" :key="row.row" :class="['preview-row', { invalid: row.errors.length }]">
-            <strong>第 {{ row.row }} 行</strong>
-            <span>{{ row.question?.content || '未生成题目' }}</span>
-            <small>{{ row.errors.length ? row.errors.join('；') : '校验通过' }}</small>
-          </div>
-        </div>
-      </section>
+      <ImportPanel
+        v-if="activeTab === 'import'"
+        v-model:import-encoding="importEncoding"
+        :import-rows="importRows"
+        :import-valid-count="importValidCount"
+        @confirm-import="confirmImport"
+        @export-template="exportTemplate"
+        @import-file="handleImportFile"
+      />
 
-      <section v-if="activeTab === 'questions'" class="panel">
-        <div class="section-title">
-          <h2>题目管理</h2>
-          <p>只有已选择且启用的题目会进入随机抽取池。</p>
-        </div>
-        <div class="filters">
-          <input v-model.trim="filters.keyword" type="search" placeholder="关键词搜索" />
-          <select v-model="filters.typeId">
-            <option value="all">全部题型</option>
-            <option v-for="item in project.questionTypes" :key="item.id" :value="item.id">{{ item.name }}</option>
-          </select>
-          <select v-model="filters.difficultyId">
-            <option value="all">全部难度</option>
-            <option v-for="item in project.difficulties" :key="item.id" :value="item.id">{{ item.name }}</option>
-          </select>
-          <select v-model="filters.selected">
-            <option value="all">选择状态</option>
-            <option value="true">已选择</option>
-            <option value="false">未选择</option>
-          </select>
-          <select v-model="filters.enabled">
-            <option value="all">启用状态</option>
-            <option value="true">已启用</option>
-            <option value="false">已禁用</option>
-          </select>
-          <input v-model.trim="filters.tag" type="search" placeholder="标签" />
-        </div>
-        <div class="toolbar">
-          <button type="button" @click="bulkSelect('allFiltered')">全选筛选结果</button>
-          <button type="button" @click="bulkSelect('invert')">反选</button>
-          <button type="button" @click="bulkSelect('none')">取消全选</button>
-          <button type="button" @click="bulkEnabled(true)">批量启用</button>
-          <button type="button" @click="bulkEnabled(false)">批量禁用</button>
-          <button class="danger" type="button" @click="deleteFilteredQuestions">批量删除</button>
-        </div>
-        <div class="question-list">
-          <article v-for="question in filteredQuestions" :key="question.id" class="question-card">
-            <div class="question-meta">
-              <label><input v-model="question.selected" type="checkbox" @change="touchProject('已更新选择状态。')" /> 参与</label>
-              <label><input v-model="question.enabled" type="checkbox" @change="touchProject('已更新启用状态。')" /> 启用</label>
-              <span>{{ question.customTypeName }}</span>
-              <span>{{ baseTypeLabels[question.baseType] }}</span>
-              <span>{{ question.difficultyName }}</span>
-              <span>{{ question.tags.join('、') || '无标签' }}</span>
-            </div>
-            <h3>{{ question.content }}</h3>
-            <ol v-if="question.options.length">
-              <li v-for="option in question.options" :key="option.id">{{ option.content }}</li>
-            </ol>
-            <p>答案：{{ answerText(question.answer) }}</p>
-          </article>
-          <div v-if="!filteredQuestions.length" class="empty">暂无题目，请先导入。</div>
-        </div>
-      </section>
+      <QuestionManagePanel
+        v-if="activeTab === 'questions'"
+        :answer-text="answerText"
+        :base-type-labels="baseTypeLabels"
+        :filtered-questions="filteredQuestions"
+        :filters="filters"
+        :project="project"
+        @bulk-enabled="bulkEnabled"
+        @bulk-select="bulkSelect"
+        @delete-filtered-questions="deleteFilteredQuestions"
+        @touch="touchProject"
+      />
 
-      <section v-if="activeTab === 'activity'" class="activity-panel">
-        <div class="activity-header">
-          <div>
-            <h2>活动运行</h2>
-            <p>{{ selectedQuestions.length }} 道题已进入抽取池</p>
-          </div>
-          <button v-if="activity.status === 'idle' || activity.status === 'finished'" class="primary" type="button" @click="startActivity">
-            开始抽题
-          </button>
-          <button v-else class="danger" type="button" @click="finishActivity">结束活动</button>
-        </div>
+      <ActivityPanel
+        v-if="activeTab === 'activity'"
+        :activity="activity"
+        :activity-progress="activityProgress"
+        :answer-text="answerText"
+        :completed-questions="completedQuestions"
+        :current-question="currentQuestion"
+        :elapsed-time="elapsedTime"
+        :format-date="formatDate"
+        :format-timer="formatTimer"
+        :selected-questions-count="selectedQuestions.length"
+        :timer-dash-offset="timerDashOffset"
+        @finish="finishActivity"
+        @next="drawNextQuestion"
+        @pause="pauseTimer"
+        @reset="resetTimer"
+        @resume="resumeTimer"
+        @reveal="revealAnswer"
+        @start="startActivity"
+      />
 
-        <div v-if="activity.status === 'finished'" class="finish">
-          <h3>活动结束</h3>
-          <p>总题数 {{ activity.completedQuestionIds.length }}，用时 {{ elapsedTime() }}</p>
-          <p>开始 {{ formatDate(activity.startedAt) }}，结束 {{ formatDate(activity.finishedAt) }}</p>
-        </div>
-
-        <div v-else-if="currentQuestion" class="stage">
-          <div class="stage-meta">
-            <span>进度 {{ activity.completedQuestionIds.length }}/{{ activity.completedQuestionIds.length + activity.remainingQuestionIds.length }}</span>
-            <span>{{ currentQuestion.customTypeName }}</span>
-            <span>{{ currentQuestion.difficultyName }}</span>
-          </div>
-          <h3>{{ currentQuestion.content }}</h3>
-          <ol v-if="currentQuestion.options.length">
-            <li v-for="option in currentQuestion.options" :key="option.id">{{ option.content }}</li>
-          </ol>
-          <div :class="['timer', { ended: activity.currentCountdownSeconds === 0 }]">{{ formatTimer(activity.currentCountdownSeconds) }}</div>
-          <div class="activity-actions">
-            <button type="button" @click="pauseTimer">暂停</button>
-            <button type="button" @click="resumeTimer">继续</button>
-            <button type="button" @click="resetTimer">重置</button>
-            <button class="primary" type="button" @click="revealAnswer">显示正确答案</button>
-            <button type="button" @click="drawNextQuestion">下一题</button>
-          </div>
-          <div v-if="activity.answerVisible" class="answer">
-            <strong>正确答案：{{ answerText(currentQuestion.answer) }}</strong>
-            <p v-if="currentQuestion.analysis">解析：{{ currentQuestion.analysis }}</p>
-            <p v-if="currentQuestion.remark">备注：{{ currentQuestion.remark }}</p>
-          </div>
-        </div>
-
-        <div v-else class="empty">点击开始后，系统会从已选择且启用的题目中随机抽取。</div>
-      </section>
-
-      <section v-if="activeTab === 'settings'" class="panel">
-        <div class="section-title">
-          <h2>主题与音效</h2>
-          <p>主题实时预览；倒计时结束会播放默认或自定义提示音。</p>
-        </div>
-        <div class="settings-grid">
-          <div class="setting-block">
-            <h3>主题</h3>
-            <div class="segmented">
-              <button
-                type="button"
-                :class="{ active: project.themeConfig.currentTheme === 'monochrome' }"
-                @click="project.themeConfig.currentTheme = 'monochrome'; touchProject('已切换为黑白简约主题。')"
-              >
-                黑白简约
-              </button>
-              <button
-                type="button"
-                :class="{ active: project.themeConfig.currentTheme === 'colorful' }"
-                @click="project.themeConfig.currentTheme = 'colorful'; touchProject('已切换为彩色主题。')"
-              >
-                彩色风格
-              </button>
-            </div>
-          </div>
-          <div class="setting-block">
-            <h3>音效</h3>
-            <label class="file-button">
-              选择本地音效
-              <input accept=".mp3,.wav,.ogg" type="file" @change="handleSoundFile" />
-            </label>
-            <label class="field">
-              <span>音量</span>
-              <input v-model.number="project.soundConfig.volume" max="1" min="0" step="0.05" type="range" @change="touchProject('已保存音量。')" />
-            </label>
-            <label><input v-model="project.soundConfig.loop" type="checkbox" @change="touchProject('已保存循环播放设置。')" /> 循环播放</label>
-            <div class="toolbar">
-              <button type="button" @click="project.soundConfig.type = 'default'; touchProject('已恢复默认音效。')">恢复默认</button>
-              <button type="button" @click="playSound">试听</button>
-              <button type="button" @click="stopSound">停止</button>
-            </div>
-          </div>
-          <div class="setting-block">
-            <h3>备份</h3>
-            <div class="toolbar">
-              <button class="primary" type="button" @click="exportBackup">导出 JSON 备份</button>
-              <label class="file-button">
-                导入 JSON 备份
-                <input accept=".json" type="file" @change="handleImportFile" />
-              </label>
-            </div>
-          </div>
-        </div>
-      </section>
+      <SettingsPanel
+        v-if="activeTab === 'settings'"
+        :project="project"
+        @export-backup="exportBackup"
+        @import-file="handleImportFile"
+        @play-sound="playSound"
+        @sound-file="handleSoundFile"
+        @stop-sound="stopSound"
+        @touch="touchProject"
+      />
     </main>
   </div>
 </template>

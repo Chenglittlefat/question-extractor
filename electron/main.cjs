@@ -15,7 +15,7 @@ async function createWindow() {
     height: 940,
     minWidth: 1100,
     minHeight: 760,
-    title: '离线抽题工作台',
+    title: '抽题助手',
     backgroundColor: '#ffffff',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
