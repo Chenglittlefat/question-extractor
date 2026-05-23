@@ -353,6 +353,11 @@ function openProject(id: string) {
   resetActivity()
 }
 
+function backToWorkspaceFromActivity() {
+  resetActivity()
+  activeView.value = 'workspace'
+}
+
 function backHome() {
   resetActivity()
   activeView.value = 'home'
@@ -511,11 +516,11 @@ function confirmImport() {
 }
 
 function parseQuestionTable(text: string, delimiter: ',' | '\t'): ImportRow[] {
-  const workbook = XLSX.read(text.replace(/^\uFEFF/, ''), { type: 'string', FS: delimiter })
+  const workbook = XLSX.read(text.replace(/^\uFEFF/, ''), { type: 'string', FS: delimiter, raw: true })
   const firstSheet = workbook.SheetNames[0]
   if (!firstSheet) return []
   const sheet = workbook.Sheets[firstSheet]
-  const table = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: '', blankrows: false, raw: false })
+  const table = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: '', blankrows: false, raw: true })
   const [headers = [], ...rows] = table.map((row) => row.map((cell) => String(cell ?? '')))
   return rows.map((row, index) => buildImportRow(row, headers, index + 2))
 }
@@ -922,7 +927,7 @@ onMounted(async () => {
     :format-timer="formatTimer"
     :selected-questions-count="selectedQuestions.length"
     :timer-dash-offset="timerDashOffset"
-    @back="activeView = 'workspace'"
+    @back="backToWorkspaceFromActivity"
     @finish="finishActivity"
     @next="drawNextQuestion"
     @pause="pauseTimer"
