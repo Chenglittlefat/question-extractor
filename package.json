@@ -1,9 +1,11 @@
 {
   "name": "question-extractor",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1b",
   "type": "module",
   "main": "electron/main.cjs",
+  "author": "Chenglittlefat",
+  "description": "Question extractor desktop app",
   "scripts": {
     "dev": "concurrently -k \"npm run web:dev\" \"wait-on http://127.0.0.1:5173 && electron .\"",
     "web:dev": "vite --host 127.0.0.1",
