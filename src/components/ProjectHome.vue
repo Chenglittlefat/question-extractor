@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { Project } from '../types/question'
 
 defineProps<{
@@ -11,6 +12,8 @@ const emit = defineEmits<{
   deleteProject: [id: string]
   openSettings: []
 }>()
+
+const pendingDeleteId = ref('')
 
 function selectedCount(project: Project) {
   return project.questions.filter((question) => question.selected && question.enabled).length
@@ -56,7 +59,7 @@ function formatDate(value: string) {
               <h2>{{ project.name }}</h2>
               <p v-if="project.description">{{ project.description }}</p>
             </div>
-            <button class="icon-danger" type="button" title="删除项目" @click.stop="emit('deleteProject', project.id)">×</button>
+            <button class="icon-danger" type="button" title="删除项目" @click.stop="pendingDeleteId = project.id">×</button>
           </div>
 
           <div class="project-tile-meta">
@@ -73,5 +76,16 @@ function formatDate(value: string) {
         </article>
       </div>
     </main>
+
+    <div v-if="pendingDeleteId" class="modal-backdrop">
+      <div class="modal-card small">
+        <h3>删除项目</h3>
+        <p>此操作不可撤销，确认删除该项目及所有题目吗？</p>
+        <div class="modal-actions">
+          <button type="button" @click="pendingDeleteId = ''">取消</button>
+          <button class="danger" type="button" @click="emit('deleteProject', pendingDeleteId); pendingDeleteId = ''">删除</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

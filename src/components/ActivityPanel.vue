@@ -24,21 +24,32 @@ const emit = defineEmits<{
   reveal: []
   next: []
 }>()
+
+const baseLabels = {
+  single: '单选题',
+  multiple: '多选题',
+  trueFalse: '判断题',
+  shortAnswer: '简答题',
+}
+
+function isCorrectOption(question: Question, option: { label?: string; content: string }) {
+  const answers = Array.isArray(question.answer) ? question.answer : [question.answer]
+  return answers.includes(option.label ?? '') || answers.includes(option.content)
+}
 </script>
 
 <template>
-  <section class="activity-panel">
-    <div class="activity-header">
-      <div>
-        <button v-if="activity.status !== 'idle'" class="icon-button" type="button" title="返回项目" @click="emit('back')">←</button>
-        <h2>活动运行</h2>
-        <p>{{ selectedQuestionsCount }} 道题已进入抽取池</p>
+  <section class="activity-view">
+    <header class="figma-header">
+      <div class="header-left">
+        <button class="icon-button" type="button" title="返回项目" @click="emit('back')">←</button>
+        <strong>{{ currentQuestion ? currentQuestion.customTypeName : '活动运行' }}</strong>
       </div>
-      <button v-if="activity.status === 'idle' || activity.status === 'finished'" class="primary" type="button" @click="emit('start')">
-        开始抽题
-      </button>
-      <button v-else class="danger" type="button" @click="emit('finish')">结束活动</button>
-    </div>
+      <div class="activity-top-progress">
+        <span>{{ activity.completedQuestionIds.length || 1 }} / {{ activity.completedQuestionIds.length + activity.remainingQuestionIds.length || selectedQuestionsCount }}</span>
+        <div><i :style="{ width: `${activityProgress}%` }"></i></div>
+      </div>
+    </header>
 
     <div v-if="activity.status === 'finished'" class="finish">
       <h3>活动结束</h3>
@@ -53,49 +64,83 @@ const emit = defineEmits<{
       </div>
     </div>
 
-    <div v-else-if="currentQuestion" class="stage">
-      <div class="stage-meta">
-        <span>进度 {{ activity.completedQuestionIds.length }}/{{ activity.completedQuestionIds.length + activity.remainingQuestionIds.length }}</span>
-        <span>{{ currentQuestion.customTypeName }}</span>
-        <span>{{ currentQuestion.difficultyName }}</span>
-      </div>
-      <h3>{{ currentQuestion.content }}</h3>
-      <ol v-if="currentQuestion.options.length">
-        <li v-for="option in currentQuestion.options" :key="option.id">{{ option.content }}</li>
-      </ol>
-      <div class="timer-wrap">
-        <svg viewBox="0 0 120 120" aria-hidden="true">
-          <circle class="timer-track" cx="60" cy="60" r="54" />
-          <circle
-            class="timer-progress"
-            cx="60"
-            cy="60"
-            r="54"
-            :style="{ strokeDashoffset: timerDashOffset }"
-          />
-        </svg>
-        <div :class="['timer', { ended: activity.currentCountdownSeconds === 0 }]">
-          {{ formatTimer(activity.currentCountdownSeconds) }}
-          <small>倒计时</small>
+    <div v-else-if="currentQuestion" class="activity-layout">
+      <div class="question-side">
+        <div class="question-main">
+          <div class="stage-meta">
+            <span>{{ currentQuestion.customTypeName }}</span>
+            <span>{{ currentQuestion.difficultyName }}</span>
+            <span>{{ baseLabels[currentQuestion.baseType] }}</span>
+            <b v-if="activity.currentCountdownSeconds === 0">时间到</b>
+          </div>
+
+          <p class="activity-question">{{ currentQuestion.content }}</p>
+
+          <div v-if="currentQuestion.options.length && currentQuestion.baseType !== 'shortAnswer'" class="activity-options">
+            <div
+              v-for="option in currentQuestion.options"
+              :key="option.id"
+              :class="['activity-option', { correct: activity.answerVisible && isCorrectOption(currentQuestion, option) }]"
+            >
+              <span>{{ option.label || option.order }}</span>
+              <p>{{ option.content }}</p>
+              <strong v-if="activity.answerVisible && isCorrectOption(currentQuestion, option)">✓</strong>
+            </div>
+          </div>
+
+          <div v-if="currentQuestion.baseType === 'trueFalse' && !activity.answerVisible" class="true-false-row">
+            <div>正确</div>
+            <div>错误</div>
+          </div>
+
+          <div v-if="activity.answerVisible" class="answer figma-answer">
+            <strong>✓ 正确答案</strong>
+            <p>{{ answerText(currentQuestion.answer) }}</p>
+            <small v-if="currentQuestion.analysis">{{ currentQuestion.analysis }}</small>
+          </div>
+        </div>
+
+        <div class="activity-actions figma-actions">
+          <button type="button" :disabled="activity.currentCountdownSeconds === 0" @click="activity.status === 'paused' ? emit('resume') : emit('pause')">
+            {{ activity.status === 'paused' ? '▶ 继续' : 'Ⅱ 暂停' }}
+          </button>
+          <button type="button" @click="emit('reset')">↻ 重置</button>
+          <span></span>
+          <button v-if="!activity.answerVisible" type="button" @click="emit('reveal')">◎ 显示答案</button>
+          <button v-else type="button" @click="emit('reveal')">◎ 隐藏答案</button>
+          <button class="primary" type="button" @click="emit('next')">
+            {{ activity.remainingQuestionIds.length ? '下一题' : '完成活动' }}
+          </button>
         </div>
       </div>
-      <div class="progress-bar" aria-hidden="true">
-        <span :style="{ width: `${activityProgress}%` }"></span>
-      </div>
-      <div class="activity-actions">
-        <button type="button" @click="emit('pause')">暂停</button>
-        <button type="button" @click="emit('resume')">继续</button>
-        <button type="button" @click="emit('reset')">重置</button>
-        <button class="primary" type="button" @click="emit('reveal')">显示正确答案</button>
-        <button type="button" @click="emit('next')">下一题</button>
-      </div>
-      <div v-if="activity.answerVisible" class="answer">
-        <strong>正确答案：{{ answerText(currentQuestion.answer) }}</strong>
-        <p v-if="currentQuestion.analysis">解析：{{ currentQuestion.analysis }}</p>
-        <p v-if="currentQuestion.remark">备注：{{ currentQuestion.remark }}</p>
-      </div>
+
+      <aside class="countdown-side">
+        <div class="timer-wrap">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="timer-track" cx="60" cy="60" r="54" />
+            <circle
+              class="timer-progress"
+              cx="60"
+              cy="60"
+              r="54"
+              :style="{ strokeDashoffset: timerDashOffset }"
+            />
+          </svg>
+          <div :class="['timer', { ended: activity.currentCountdownSeconds === 0 }]">
+            {{ formatTimer(activity.currentCountdownSeconds) }}
+            <small>倒计时</small>
+          </div>
+        </div>
+        <div class="countdown-caption">
+          <p>{{ activity.status === 'paused' ? '已暂停' : activity.currentCountdownSeconds === 0 ? '时间已到' : '倒计时进行中' }}</p>
+          <small>第 {{ activity.completedQuestionIds.length || 1 }} 题 / 共 {{ activity.completedQuestionIds.length + activity.remainingQuestionIds.length || selectedQuestionsCount }} 题</small>
+        </div>
+      </aside>
     </div>
 
-    <div v-else class="empty">点击开始后，系统会从已选择且启用的题目中随机抽取。</div>
+    <div v-else class="empty activity-empty">
+      <p>点击开始后，系统会从已选择且启用的题目中随机抽取。</p>
+      <button class="primary" type="button" @click="emit('start')">开始抽题</button>
+    </div>
   </section>
 </template>

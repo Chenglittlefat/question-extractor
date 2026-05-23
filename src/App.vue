@@ -7,11 +7,13 @@ import AppTopbar from './components/AppTopbar.vue'
 import CountdownPanel from './components/CountdownPanel.vue'
 import DifficultyPanel from './components/DifficultyPanel.vue'
 import ImportPanel from './components/ImportPanel.vue'
+import NewProjectModal from './components/NewProjectModal.vue'
 import ProjectHome from './components/ProjectHome.vue'
 import ProjectPanel from './components/ProjectPanel.vue'
 import QuestionManagePanel from './components/QuestionManagePanel.vue'
 import QuestionTypePanel from './components/QuestionTypePanel.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
+import FinishView from './components/FinishView.vue'
 import type {
   ActivityStatus,
   BaseQuestionType,
@@ -24,7 +26,7 @@ import type {
   QuestionTypeConfig,
 } from './types/question'
 
-type AppView = 'home' | 'workspace' | 'activity'
+type AppView = 'home' | 'workspace' | 'activity' | 'finish' | 'settings'
 
 const baseTypeLabels: Record<BaseQuestionType, string> = {
   single: '单选题',
@@ -34,14 +36,12 @@ const baseTypeLabels: Record<BaseQuestionType, string> = {
 }
 
 const tabs = [
-  { id: 'project', label: '项目信息', icon: '⌂' },
+  { id: 'project', label: '项目信息', icon: '□' },
   { id: 'types', label: '题型设置', icon: '+' },
-  { id: 'difficulties', label: '难度设置', icon: '≡' },
+  { id: 'difficulties', label: '难度设置', icon: '◇' },
   { id: 'countdown', label: '倒计时', icon: '◷' },
   { id: 'import', label: '题目导入', icon: '↑' },
   { id: 'questions', label: '题目管理', icon: '☑' },
-  { id: 'activity', label: '活动运行', icon: '▶' },
-  { id: 'settings', label: '设置备份', icon: '⚙' },
 ] as const
 
 type TabId = (typeof tabs)[number]['id']
@@ -73,14 +73,14 @@ const makeType = (
   }
 }
 
-const makeProject = (): Project => {
+const makeProject = (name = '我的抽题活动', description = '用于课堂、培训或现场问答的离线抽题项目。'): Project => {
   const timestamp = now()
   const difficulties = ['简单', '中等', '困难'].map(makeDifficulty)
   const difficultyIds = difficulties.map((difficulty) => difficulty.id)
   return {
     id: uid('project'),
-    name: '我的抽题活动',
-    description: '用于课堂、培训或现场问答的离线抽题项目。',
+    name,
+    description,
     questionTypes: [
       makeType('理论单选', 'single', difficultyIds, 30),
       makeType('案例多选', 'multiple', difficultyIds, 60),
@@ -106,6 +106,7 @@ const projects = ref<Project[]>([makeProject()])
 const activeProjectId = ref(projects.value[0]?.id ?? '')
 const activeTab = ref<TabId>('project')
 const activeView = ref<AppView>('home')
+const showNewProjectModal = ref(false)
 const notice = ref('项目正在载入，本机 SQLite 会保存所有项目数据。')
 const isHydrated = ref(false)
 const dataPath = ref('')
@@ -222,11 +223,16 @@ function touchProject(message = '已保存当前项目。') {
 }
 
 function createProject() {
-  const nextProject = makeProject()
+  showNewProjectModal.value = true
+}
+
+function confirmCreateProject(payload: { name: string; description: string }) {
+  const nextProject = makeProject(payload.name, payload.description)
   projects.value.unshift(nextProject)
   activeProjectId.value = nextProject.id
   activeTab.value = 'project'
   activeView.value = 'workspace'
+  showNewProjectModal.value = false
   resetActivity()
   notice.value = '已创建新项目。'
 }
@@ -245,8 +251,7 @@ function backHome() {
 
 function openSettings() {
   activeProjectId.value = project.value.id
-  activeTab.value = 'settings'
-  activeView.value = 'workspace'
+  activeView.value = 'settings'
 }
 
 function deleteProject(id: string) {
@@ -646,7 +651,7 @@ function resetTimer() {
 }
 
 function revealAnswer() {
-  activity.answerVisible = true
+  activity.answerVisible = !activity.answerVisible
   stopSound()
 }
 
@@ -656,7 +661,7 @@ function finishActivity() {
   activity.status = 'finished'
   activity.finishedAt = now()
   activity.currentQuestionId = ''
-  activeView.value = 'activity'
+  activeView.value = 'finish'
 }
 
 function resetActivity() {
@@ -837,6 +842,37 @@ onMounted(async () => {
     @start="startActivity"
   />
 
+  <FinishView
+    v-else-if="activeView === 'finish'"
+    :answer-text="answerText"
+    :completed-questions="completedQuestions"
+    :elapsed-time="elapsedTime()"
+    :project="project"
+    @home="backHome"
+    @retry="startActivity"
+  />
+
+  <div v-else-if="activeView === 'settings'" class="settings-view">
+    <header class="figma-header">
+      <div class="header-left">
+        <button class="icon-button" type="button" @click="activeView = 'home'">←</button>
+        <strong>设置</strong>
+      </div>
+    </header>
+    <main class="settings-main">
+      <SettingsPanel
+        :project="project"
+        @export-backup="exportBackup"
+        @import-file="handleImportFile"
+        @play-sound="playSound"
+        @sound-file="handleSoundFile"
+        @stop-sound="stopSound"
+        @touch="touchProject"
+      />
+      <p class="app-version">抽题助手 v1.0.0 · 纯离线运行 · 数据存储在本地</p>
+    </main>
+  </div>
+
   <div v-else class="app-shell">
     <AppSidebar
       v-model:active-project-id="activeProjectId"
@@ -921,38 +957,8 @@ onMounted(async () => {
         @touch="touchProject"
       />
 
-      <ActivityPanel
-        v-if="activeTab === 'activity'"
-        :activity="activity"
-        :activity-progress="activityProgress"
-        :answer-text="answerText"
-        :completed-questions="completedQuestions"
-        :current-question="currentQuestion"
-        :elapsed-time="elapsedTime"
-        :format-date="formatDate"
-        :format-timer="formatTimer"
-        :selected-questions-count="selectedQuestions.length"
-        :timer-dash-offset="timerDashOffset"
-        @back="activeTab = 'project'"
-        @finish="finishActivity"
-        @next="drawNextQuestion"
-        @pause="pauseTimer"
-        @reset="resetTimer"
-        @resume="resumeTimer"
-        @reveal="revealAnswer"
-        @start="startActivity"
-      />
-
-      <SettingsPanel
-        v-if="activeTab === 'settings'"
-        :project="project"
-        @export-backup="exportBackup"
-        @import-file="handleImportFile"
-        @play-sound="playSound"
-        @sound-file="handleSoundFile"
-        @stop-sound="stopSound"
-        @touch="touchProject"
-      />
     </main>
   </div>
+
+  <NewProjectModal v-if="showNewProjectModal" @close="showNewProjectModal = false" @create="confirmCreateProject" />
 </template>
