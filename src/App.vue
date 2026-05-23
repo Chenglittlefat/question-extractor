@@ -8,6 +8,7 @@ import CountdownPanel from './components/CountdownPanel.vue'
 import DifficultyPanel from './components/DifficultyPanel.vue'
 import ImportPanel from './components/ImportPanel.vue'
 import NewProjectModal from './components/NewProjectModal.vue'
+import OperationGuide from './components/OperationGuide.vue'
 import ProjectHome from './components/ProjectHome.vue'
 import ProjectPanel from './components/ProjectPanel.vue'
 import QuestionManagePanel from './components/QuestionManagePanel.vue'
@@ -25,10 +26,11 @@ import type {
   Project,
   Question,
   QuestionOption,
+  ThemeName,
   QuestionTypeConfig,
 } from './types/question'
 
-type AppView = 'home' | 'workspace' | 'activity' | 'finish' | 'settings'
+type AppView = 'home' | 'workspace' | 'activity' | 'finish' | 'settings' | 'help'
 
 const chromeMenus = ['文件', '编辑', '查看', '窗口', '帮助']
 
@@ -106,6 +108,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> => typeof va
 const normalizeString = (value: unknown, fallback = '') => (typeof value === 'string' ? value : fallback)
 const normalizeBoolean = (value: unknown, fallback: boolean) => (typeof value === 'boolean' ? value : fallback)
 const normalizeStringArray = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [])
+const normalizeTheme = (value: unknown): ThemeName =>
+  ['monochrome', 'colorful', 'gaussian-blur'].includes(String(value)) ? (value as ThemeName) : 'monochrome'
 
 const normalizeQuestion = (value: unknown, fallbackType: QuestionTypeConfig, fallbackDifficulty: DifficultyConfig): Question | null => {
   if (!isRecord(value)) return null
@@ -200,8 +204,8 @@ const normalizeProject = (value: unknown): Project | null => {
       loop: normalizeBoolean(soundConfig.loop, fallback.soundConfig.loop),
     },
     themeConfig: {
-      currentTheme: themeConfig.currentTheme === 'colorful' ? 'colorful' : 'monochrome',
-      defaultTheme: themeConfig.defaultTheme === 'colorful' ? 'colorful' : 'monochrome',
+      currentTheme: normalizeTheme(themeConfig.currentTheme),
+      defaultTheme: normalizeTheme(themeConfig.defaultTheme),
     },
     createdAt: normalizeString(value.createdAt, fallback.createdAt),
     updatedAt: normalizeString(value.updatedAt, fallback.updatedAt),
@@ -219,6 +223,7 @@ const activeProjectId = ref(projects.value[0]?.id ?? '')
 const activeTab = ref<TabId>('project')
 const activeView = ref<AppView>('home')
 const showNewProjectModal = ref(false)
+const showHelpMenu = ref(false)
 const notice = ref('项目正在载入，本机 SQLite 会保存所有项目数据。')
 const isHydrated = ref(false)
 const dataPath = ref('')
@@ -370,6 +375,17 @@ function backHome() {
 function openSettings() {
   activeProjectId.value = project.value.id
   activeView.value = 'settings'
+  showHelpMenu.value = false
+}
+
+function handleChromeMenu(menu: string) {
+  showHelpMenu.value = menu === '帮助' ? !showHelpMenu.value : false
+}
+
+function openOperationGuide() {
+  activeProjectId.value = project.value.id
+  activeView.value = 'help'
+  showHelpMenu.value = false
 }
 
 function deleteProject(id: string) {
@@ -937,7 +953,12 @@ onMounted(async () => {
           <span aria-hidden="true">›</span>
         </button>
         <nav class="chrome-menu" aria-label="应用菜单">
-          <button v-for="menu in chromeMenus" :key="menu" type="button">{{ menu }}</button>
+          <div v-for="menu in chromeMenus" :key="menu" class="chrome-menu-item">
+            <button type="button" @click="handleChromeMenu(menu)">{{ menu }}</button>
+            <div v-if="menu === '帮助' && showHelpMenu" class="chrome-dropdown">
+              <button type="button" @click="openOperationGuide">操作说明</button>
+            </div>
+          </div>
         </nav>
       </div>
 
@@ -1018,6 +1039,18 @@ onMounted(async () => {
             @touch="touchProject"
           />
           <p class="app-version">抽题助手 v1.0.0 · 纯离线运行 · 数据存储在本地</p>
+        </main>
+      </div>
+
+      <div v-else-if="activeView === 'help'" class="help-view">
+        <header class="figma-header">
+          <div class="header-left">
+            <button class="icon-button" type="button" @click="activeView = 'home'">←</button>
+            <strong>操作说明</strong>
+          </div>
+        </header>
+        <main class="help-main">
+          <OperationGuide />
         </main>
       </div>
 

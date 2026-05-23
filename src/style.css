@@ -79,6 +79,23 @@
   --shadow: 0 10px 28px rgba(37, 99, 235, 0.13);
 }
 
+:root[data-theme='gaussian-blur'] {
+  --bg: #f6f8fb;
+  --surface: rgba(255, 255, 255, 0.5);
+  --panel: rgba(255, 255, 255, 0.68);
+  --text: #172033;
+  --muted: #667084;
+  --border: rgba(255, 255, 255, 0.48);
+  --primary: #2f6fda;
+  --primary-text: #ffffff;
+  --danger: #d94b5c;
+  --success: #168a63;
+  --warning: #c47a22;
+  --shadow: 0 18px 48px rgba(43, 64, 91, 0.18);
+  --glass-blur: blur(22px) saturate(1.25);
+  --toolbar-blur: blur(18px);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -263,6 +280,11 @@ h3 {
   gap: 2px;
 }
 
+.chrome-menu-item {
+  position: relative;
+  -webkit-app-region: no-drag;
+}
+
 .chrome-menu button,
 .chrome-nav,
 .chrome-window-controls button {
@@ -306,6 +328,26 @@ h3 {
   background: rgba(15, 23, 42, 0.07);
   box-shadow: none;
   transform: none;
+}
+
+.chrome-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 40;
+  min-width: 132px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+}
+
+.chrome-dropdown button {
+  width: 100%;
+  justify-content: flex-start;
+  color: var(--text);
+  text-align: left;
 }
 
 .chrome-nav:disabled {
@@ -714,6 +756,7 @@ nav button.active .nav-icon {
 
 .activity-view,
 .finish-view,
+.help-view,
 .settings-view {
   min-height: var(--content-height);
   background: var(--bg);
@@ -727,6 +770,7 @@ nav button.active .nav-icon {
 }
 
 :root[data-theme='colorful'] .settings-view,
+:root[data-theme='colorful'] .help-view,
 :root[data-theme='colorful'] .home-shell,
 :root[data-theme='colorful'] .activity-view,
 :root[data-theme='colorful'] .finish-view,
@@ -736,12 +780,419 @@ nav button.active .nav-icon {
     var(--bg);
 }
 
+:root[data-theme='gaussian-blur'] .desktop-shell,
+:root[data-theme='gaussian-blur'] body,
+:root[data-theme='gaussian-blur'] #app,
+:root[data-theme='gaussian-blur'] .settings-view,
+:root[data-theme='gaussian-blur'] .help-view,
+:root[data-theme='gaussian-blur'] .home-shell,
+:root[data-theme='gaussian-blur'] .activity-view,
+:root[data-theme='gaussian-blur'] .finish-view,
+:root[data-theme='gaussian-blur'] .workspace {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(101, 166, 255, 0.34), transparent 30%),
+    radial-gradient(circle at 86% 12%, rgba(255, 165, 145, 0.26), transparent 28%),
+    radial-gradient(circle at 62% 78%, rgba(112, 207, 176, 0.28), transparent 34%),
+    linear-gradient(135deg, #f9fbff 0%, #eef3f7 52%, #f7f3ef 100%);
+}
+
 :root[data-theme='colorful'] .figma-header,
 :root[data-theme='colorful'] .home-header,
 :root[data-theme='colorful'] .topbar,
 :root[data-theme='colorful'] .sidebar {
   background: rgba(255, 255, 255, 0.92);
   border-color: rgba(37, 99, 235, 0.16);
+}
+
+:root[data-theme='colorful'] .settings-main {
+  width: min(100%, 640px);
+  padding-top: 48px;
+}
+
+:root[data-theme='colorful'] .settings-main .panel {
+  overflow: hidden;
+  padding: 28px 0 0;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 60px rgba(37, 99, 235, 0.1);
+}
+
+:root[data-theme='colorful'] .settings-main .section-title {
+  margin: 0 28px 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+}
+
+:root[data-theme='colorful'] .settings-main .settings-grid {
+  gap: 0;
+}
+
+:root[data-theme='colorful'] .settings-main .setting-block {
+  gap: 14px;
+  padding: 22px 28px;
+  border-top: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+:root[data-theme='colorful'] .settings-main .setting-block:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+:root[data-theme='colorful'] .settings-main .setting-block:last-child {
+  padding-bottom: 28px;
+}
+
+:root[data-theme='colorful'] .settings-main .segmented {
+  gap: 0;
+  overflow: hidden;
+  padding: 4px;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+:root[data-theme='colorful'] .settings-main .segmented button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+}
+
+:root[data-theme='colorful'] .settings-main .segmented button:hover {
+  background: rgba(37, 99, 235, 0.08);
+  box-shadow: none;
+  transform: none;
+}
+
+:root[data-theme='colorful'] .settings-main .segmented button.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
+}
+
+:root[data-theme='colorful'] .settings-main .file-button,
+:root[data-theme='colorful'] .settings-main .toolbar button {
+  border-color: rgba(37, 99, 235, 0.16);
+  background: #ffffff;
+}
+
+:root[data-theme='colorful'] .settings-main .toolbar button.primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  border-color: transparent;
+}
+
+:root[data-theme='colorful'] .settings-main .toolbar button.primary:hover {
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.2);
+}
+
+:root[data-theme='colorful'] .settings-main input[type='range'] {
+  background: transparent;
+}
+
+:root[data-theme='colorful'] .app-version {
+  width: min(100%, 640px);
+  margin-inline: auto;
+}
+
+:root[data-theme='gaussian-blur'] .chrome-titlebar,
+:root[data-theme='gaussian-blur'] .figma-header,
+:root[data-theme='gaussian-blur'] .home-header,
+:root[data-theme='gaussian-blur'] .topbar,
+:root[data-theme='gaussian-blur'] .sidebar,
+:root[data-theme='gaussian-blur'] .chrome-dropdown,
+:root[data-theme='gaussian-blur'] .panel,
+:root[data-theme='gaussian-blur'] .project-tile,
+:root[data-theme='gaussian-blur'] .modal-card,
+:root[data-theme='gaussian-blur'] .finish-table,
+:root[data-theme='gaussian-blur'] .finish-stats div,
+:root[data-theme='gaussian-blur'] .question-card,
+:root[data-theme='gaussian-blur'] .preview-row,
+:root[data-theme='gaussian-blur'] .activity-option,
+:root[data-theme='gaussian-blur'] .true-false-row div,
+:root[data-theme='gaussian-blur'] .finish-row {
+  border-color: rgba(255, 255, 255, 0.52);
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: var(--shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+:root[data-theme='gaussian-blur'] .chrome-titlebar {
+  color: #445067;
+}
+
+:root[data-theme='gaussian-blur'] .count-card,
+:root[data-theme='gaussian-blur'] .setting-block,
+:root[data-theme='gaussian-blur'] .overview-card,
+:root[data-theme='gaussian-blur'] .table-row.head,
+:root[data-theme='gaussian-blur'] .ready-badge,
+:root[data-theme='gaussian-blur'] .project-tile-tags span,
+:root[data-theme='gaussian-blur'] .activity-option span,
+:root[data-theme='gaussian-blur'] .nav-icon {
+  background: rgba(255, 255, 255, 0.42);
+}
+
+:root[data-theme='gaussian-blur'] .figma-actions {
+  background:
+    linear-gradient(180deg, rgba(246, 248, 251, 0.28), rgba(246, 248, 251, 0.78) 24px),
+    transparent;
+  box-shadow: 0 -18px 34px rgba(246, 248, 251, 0.66);
+  backdrop-filter: var(--toolbar-blur);
+  -webkit-backdrop-filter: var(--toolbar-blur);
+}
+
+:root[data-theme='gaussian-blur'] button,
+:root[data-theme='gaussian-blur'] input,
+:root[data-theme='gaussian-blur'] select,
+:root[data-theme='gaussian-blur'] textarea,
+:root[data-theme='gaussian-blur'] .file-button {
+  background: rgba(255, 255, 255, 0.58);
+}
+
+:root[data-theme='gaussian-blur'] .primary,
+:root[data-theme='gaussian-blur'] .mark,
+:root[data-theme='gaussian-blur'] .award-mark,
+:root[data-theme='gaussian-blur'] .primary-overview {
+  background: linear-gradient(135deg, #2f6fda, #289475);
+  border-color: transparent;
+}
+
+:root[data-theme='gaussian-blur'] .settings-main {
+  width: min(100%, 640px);
+  padding-top: 48px;
+}
+
+:root[data-theme='colorful'] .help-main .operation-guide,
+:root[data-theme='gaussian-blur'] .help-main .operation-guide {
+  border-radius: 8px;
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .panel {
+  overflow: hidden;
+  padding: 28px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.54);
+  box-shadow:
+    0 28px 80px rgba(42, 64, 92, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.56);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .section-title {
+  margin: 0 28px 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(97, 117, 139, 0.12);
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .settings-grid {
+  gap: 0;
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .setting-block {
+  gap: 14px;
+  padding: 22px 28px;
+  border-top: 1px solid rgba(97, 117, 139, 0.1);
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .setting-block:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .setting-block:last-child {
+  padding-bottom: 28px;
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .segmented {
+  gap: 0;
+  overflow: hidden;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .segmented button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .segmented button:hover {
+  background: rgba(255, 255, 255, 0.44);
+  box-shadow: none;
+  transform: none;
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .segmented button.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(47, 111, 218, 0.94), rgba(40, 148, 117, 0.9));
+  box-shadow: 0 10px 24px rgba(47, 111, 218, 0.18);
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .file-button,
+:root[data-theme='gaussian-blur'] .settings-main .toolbar button {
+  border-color: rgba(255, 255, 255, 0.54);
+  background: rgba(255, 255, 255, 0.38);
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2f6fda, #289475);
+  border-color: rgba(47, 111, 218, 0.18);
+  box-shadow: 0 12px 28px rgba(47, 111, 218, 0.18);
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .toolbar button.primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2f6fda, #289475);
+}
+
+:root[data-theme='gaussian-blur'] .settings-main .toolbar button.primary:hover {
+  box-shadow: 0 16px 34px rgba(47, 111, 218, 0.22);
+}
+
+:root[data-theme='gaussian-blur'] .settings-main input[type='range'] {
+  background: transparent;
+}
+
+:root[data-theme='gaussian-blur'] .app-version {
+  width: min(100%, 640px);
+  margin-inline: auto;
+  color: rgba(102, 112, 132, 0.82);
+}
+
+:root[data-theme='gaussian-blur'] .app-shell,
+:root[data-theme='gaussian-blur'] .workspace {
+  background: transparent;
+}
+
+:root[data-theme='gaussian-blur'] .sidebar {
+  overflow: hidden;
+  border-right: 0;
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.28),
+    16px 0 42px rgba(69, 90, 118, 0.08);
+}
+
+:root[data-theme='gaussian-blur'] .sidebar::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  pointer-events: none;
+  content: '';
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.24));
+}
+
+:root[data-theme='gaussian-blur'] .sidebar nav {
+  position: relative;
+  z-index: 1;
+}
+
+:root[data-theme='gaussian-blur'] .sidebar nav button {
+  margin: 2px 10px;
+  width: calc(100% - 20px);
+  border-radius: 7px;
+  color: rgba(102, 112, 132, 0.9);
+}
+
+:root[data-theme='gaussian-blur'] .sidebar nav button:hover {
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: none;
+  transform: none;
+}
+
+:root[data-theme='gaussian-blur'] .sidebar nav button.active {
+  background: rgba(255, 255, 255, 0.5);
+  color: #172033;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 10px 24px rgba(42, 64, 92, 0.08);
+}
+
+:root[data-theme='gaussian-blur'] .sidebar nav button.active .nav-icon {
+  color: #2f6fda;
+  background: rgba(47, 111, 218, 0.1);
+}
+
+:root[data-theme='gaussian-blur'] .question-side {
+  padding: 36px 44px 116px;
+}
+
+:root[data-theme='gaussian-blur'] .question-main {
+  display: flex;
+  flex-direction: column;
+}
+
+:root[data-theme='gaussian-blur'] .stage-meta {
+  margin-bottom: 10px;
+}
+
+:root[data-theme='gaussian-blur'] .stage-meta span {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.44);
+}
+
+:root[data-theme='gaussian-blur'] .activity-question {
+  max-width: 920px;
+  margin-bottom: 28px;
+  font-size: 21px;
+}
+
+:root[data-theme='gaussian-blur'] .activity-options {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  width: min(100%, 980px);
+  gap: 14px;
+}
+
+:root[data-theme='gaussian-blur'] .activity-option {
+  min-height: 68px;
+  padding: 14px 16px;
+  border-color: rgba(255, 255, 255, 0.54);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.32)),
+    rgba(255, 255, 255, 0.44);
+  box-shadow:
+    0 12px 34px rgba(42, 64, 92, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.48);
+}
+
+:root[data-theme='gaussian-blur'] .activity-option span {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  background: rgba(255, 255, 255, 0.42);
+  color: #667084;
+}
+
+:root[data-theme='gaussian-blur'] .activity-option p {
+  color: #253047;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+:root[data-theme='gaussian-blur'] .activity-option.correct {
+  border-color: rgba(22, 138, 99, 0.42);
+  background:
+    linear-gradient(135deg, rgba(236, 253, 245, 0.72), rgba(255, 255, 255, 0.38)),
+    rgba(236, 253, 245, 0.5);
+}
+
+:root[data-theme='gaussian-blur'] .activity-option.correct span {
+  background: linear-gradient(135deg, #16a34a, #289475);
+}
+
+:root[data-theme='gaussian-blur'] .countdown-side {
+  border-left-color: rgba(255, 255, 255, 0.36);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .activity-top-progress {
@@ -1333,32 +1784,118 @@ nav button.active .nav-icon {
 }
 
 .finish-main,
+.help-main,
 .settings-main {
   width: min(100%, 768px);
   margin: 0 auto;
   padding: 40px 32px;
 }
 
+.help-main {
+  width: min(100%, 880px);
+  padding-top: 48px;
+}
+
+.operation-guide {
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.markdown-body {
+  color: var(--text);
+  line-height: 1.75;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  line-height: 1.35;
+}
+
+.markdown-body h1 {
+  margin-bottom: 22px;
+  font-size: 28px;
+}
+
+.markdown-body h2 {
+  margin-top: 28px;
+  margin-bottom: 12px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+  font-size: 20px;
+}
+
+.markdown-body h3 {
+  margin-top: 20px;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.markdown-body p,
+.markdown-body ul {
+  margin: 0 0 12px;
+}
+
+.markdown-body ul {
+  display: grid;
+  gap: 6px;
+  padding-left: 22px;
+}
+
+.markdown-body li::marker {
+  color: var(--primary);
+}
+
+.markdown-body code {
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: var(--surface);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.92em;
+}
+
 .settings-main {
-  width: min(100%, 560px);
+  width: min(100%, 640px);
+  padding-top: 48px;
 }
 
 .settings-main .panel {
-  border: 0;
-  padding: 0;
+  overflow: hidden;
+  padding: 28px 0 0;
+  border-radius: 8px;
   box-shadow: none;
+}
+
+.settings-main .section-title {
+  margin: 0 28px 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
 
 .settings-main .settings-grid {
   grid-template-columns: 1fr;
-  gap: 32px;
+  gap: 0;
 }
 
 .settings-main .setting-block {
+  gap: 14px;
+  padding: 22px 28px;
   border: 0;
+  border-top: 1px solid var(--border);
   border-radius: 0;
   background: transparent;
-  padding: 0;
+}
+
+.settings-main .setting-block:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.settings-main .setting-block:last-child {
+  padding-bottom: 28px;
 }
 
 .app-version {
@@ -1541,7 +2078,7 @@ button .svg-icon,
 
 .segmented {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
