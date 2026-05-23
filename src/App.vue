@@ -14,6 +14,7 @@ import QuestionManagePanel from './components/QuestionManagePanel.vue'
 import QuestionTypePanel from './components/QuestionTypePanel.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import FinishView from './components/FinishView.vue'
+import { icons } from './assets/icons'
 import type {
   ActivityStatus,
   BaseQuestionType,
@@ -36,12 +37,12 @@ const baseTypeLabels: Record<BaseQuestionType, string> = {
 }
 
 const tabs = [
-  { id: 'project', label: '项目信息', icon: '□' },
-  { id: 'types', label: '题型设置', icon: '+' },
-  { id: 'difficulties', label: '难度设置', icon: '◇' },
-  { id: 'countdown', label: '倒计时', icon: '◷' },
-  { id: 'import', label: '题目导入', icon: '↑' },
-  { id: 'questions', label: '题目管理', icon: '☑' },
+  { id: 'project', label: '项目信息', icon: icons.config },
+  { id: 'types', label: '题型设置', icon: icons.questionType },
+  { id: 'difficulties', label: '难度设置', icon: icons.difficulty },
+  { id: 'countdown', label: '倒计时', icon: icons.countdown },
+  { id: 'import', label: '题目导入', icon: icons.upload },
+  { id: 'questions', label: '题目管理', icon: icons.checkList },
 ] as const
 
 type TabId = (typeof tabs)[number]['id']

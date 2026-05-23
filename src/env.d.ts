@@ -31,3 +31,8 @@ interface QuestionApi {
 interface Window {
   questionApi?: QuestionApi
 }
+
+declare module '*.svg' {
+  const src: string
+  export default src
+}

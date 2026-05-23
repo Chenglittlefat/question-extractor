@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { Project, Question } from '../types/question'
+import { icons } from '../assets/icons'
+import SvgIcon from './SvgIcon.vue'
 
 defineProps<{
   project: Project
@@ -18,15 +20,15 @@ const emit = defineEmits<{
   <div class="finish-view">
     <header class="figma-header">
       <div class="header-left">
-        <button class="icon-button" type="button" @click="emit('home')">⌂</button>
+        <button class="icon-button" type="button" @click="emit('home')"><SvgIcon :src="icons.home" /></button>
         <strong>{{ project.name }}</strong>
       </div>
-      <button type="button" @click="emit('retry')">↻ 再来一次</button>
+      <button type="button" @click="emit('retry')"><SvgIcon :src="icons.rotateCcw" />再来一次</button>
     </header>
 
     <main class="finish-main">
       <div class="finish-hero">
-        <div class="award-mark">✓</div>
+        <div class="award-mark"><SvgIcon :src="icons.award" :size="28" /></div>
         <h1>活动已完成！</h1>
         <p>所有题目已完成抽取</p>
       </div>

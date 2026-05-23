@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Project } from '../types/question'
+import SvgIcon from './SvgIcon.vue'
 
 interface NavTab {
   id: string
@@ -33,7 +34,7 @@ const emit = defineEmits<{
         :class="{ active: activeTab === tab.id }"
         @click="emit('update:activeTab', tab.id)"
       >
-        <span class="nav-icon">{{ tab.icon }}</span>
+        <span class="nav-icon"><SvgIcon :src="tab.icon" :size="15" /></span>
         <span>{{ tab.label }}</span>
       </button>
     </nav>

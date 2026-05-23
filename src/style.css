@@ -1122,6 +1122,31 @@ nav button.active .nav-icon {
   font-weight: 800;
 }
 
+.svg-icon {
+  display: inline-block;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  flex: 0 0 var(--icon-size);
+  background: currentColor;
+  mask: var(--icon-src) center / contain no-repeat;
+  -webkit-mask: var(--icon-src) center / contain no-repeat;
+}
+
+button .svg-icon,
+.file-button .svg-icon {
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+
+.icon-button .svg-icon,
+.icon-danger .svg-icon,
+.mark .svg-icon,
+.award-mark .svg-icon,
+.nav-icon .svg-icon,
+.project-tile-meta .svg-icon {
+  margin-right: 0;
+}
+
 .finish-hero p {
   color: var(--muted);
 }

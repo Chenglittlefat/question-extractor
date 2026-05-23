@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { Project } from '../types/question'
+import { icons } from '../assets/icons'
+import SvgIcon from './SvgIcon.vue'
 
 defineProps<{
   project: Project
@@ -44,6 +46,7 @@ const emit = defineEmits<{
       <div class="setting-block">
         <h3>音效</h3>
         <label class="file-button">
+          <SvgIcon :src="icons.upload" />
           选择本地音效
           <input accept=".mp3,.wav,.ogg" type="file" @change="emit('soundFile', $event)" />
         </label>
@@ -54,15 +57,16 @@ const emit = defineEmits<{
         <label><input v-model="project.soundConfig.loop" type="checkbox" @change="emit('touch', '已保存循环播放设置。')" /> 循环播放</label>
         <div class="toolbar">
           <button type="button" @click="project.soundConfig.type = 'default'; emit('touch', '已恢复默认音效。')">恢复默认</button>
-          <button type="button" @click="emit('playSound')">试听</button>
+          <button type="button" @click="emit('playSound')"><SvgIcon :src="icons.play" />试听</button>
           <button type="button" @click="emit('stopSound')">停止</button>
         </div>
       </div>
       <div class="setting-block">
         <h3>备份</h3>
         <div class="toolbar">
-          <button class="primary" type="button" @click="emit('exportBackup')">导出 JSON 备份</button>
+          <button class="primary" type="button" @click="emit('exportBackup')"><SvgIcon :src="icons.download" />导出 JSON 备份</button>
           <label class="file-button">
+            <SvgIcon :src="icons.upload" />
             导入 JSON 备份
             <input accept=".json" type="file" @change="emit('importFile', $event)" />
           </label>

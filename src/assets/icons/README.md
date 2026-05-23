@@ -1,5 +1,7 @@
 # SVG 资产需求清单
 
+> 适配状态：已从 `propmts/svg-full/outline/` 中筛选并复制一批可用 SVG 到本目录，当前界面核心图标已接入 `SvgIcon.vue` 统一渲染。后续如果要替换成更贴近品牌的 SVG，保持同名覆盖即可。
+
 > SVG 建议统一放在本目录：`src/assets/icons/`
 >
 > 建议使用 `24x24` viewBox，图标优先使用 `stroke="currentColor"` 或 `fill="currentColor"`，方便跟随按钮和主题颜色。

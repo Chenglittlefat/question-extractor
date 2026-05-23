@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { ImportEncoding, ImportRow } from '../types/question'
+import { icons } from '../assets/icons'
+import SvgIcon from './SvgIcon.vue'
 
 defineProps<{
   importEncoding: ImportEncoding
@@ -22,8 +24,9 @@ const emit = defineEmits<{
       <p>支持 CSV/TSV 表格、UTF-8/UTF-16 文本识别和 JSON 备份恢复。</p>
     </div>
     <div class="toolbar">
-      <button class="primary" type="button" @click="emit('exportTemplate')">生成导入模板</button>
+      <button class="primary" type="button" @click="emit('exportTemplate')"><SvgIcon :src="icons.download" />生成导入模板</button>
       <label class="file-button">
+        <SvgIcon :src="icons.upload" />
         导入题目或备份
         <input accept=".csv,.tsv,.json,.xlsx,.xls" type="file" @change="emit('importFile', $event)" />
       </label>

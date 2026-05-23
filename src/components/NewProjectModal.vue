@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
+import { icons } from '../assets/icons'
+import SvgIcon from './SvgIcon.vue'
 
 const emit = defineEmits<{
   close: []
@@ -20,7 +22,7 @@ function create() {
     <div class="modal-card" @click.stop>
       <div class="modal-head">
         <h3>新建项目</h3>
-        <button class="icon-button" type="button" @click="emit('close')">×</button>
+        <button class="icon-button" type="button" @click="emit('close')"><SvgIcon :src="icons.x" /></button>
       </div>
       <div class="modal-body">
         <label class="field">
@@ -35,7 +37,7 @@ function create() {
       </div>
       <div class="modal-actions">
         <button type="button" @click="emit('close')">取消</button>
-        <button class="primary" :disabled="!draft.name.trim()" type="button" @click="create">创建项目</button>
+        <button class="primary" :disabled="!draft.name.trim()" type="button" @click="create"><SvgIcon :src="icons.plus" />创建项目</button>
       </div>
     </div>
   </div>

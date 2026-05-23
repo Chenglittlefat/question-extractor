@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { ActivityRuntimeState, Question } from '../types/question'
+import { icons } from '../assets/icons'
+import SvgIcon from './SvgIcon.vue'
 
 defineProps<{
   activity: ActivityRuntimeState
@@ -42,7 +44,9 @@ function isCorrectOption(question: Question, option: { label?: string; content: 
   <section class="activity-view">
     <header class="figma-header">
       <div class="header-left">
-        <button class="icon-button" type="button" title="返回项目" @click="emit('back')">←</button>
+        <button class="icon-button" type="button" title="返回项目" @click="emit('back')">
+          <SvgIcon :src="icons.arrowLeft" />
+        </button>
         <strong>{{ currentQuestion ? currentQuestion.customTypeName : '活动运行' }}</strong>
       </div>
       <div class="activity-top-progress">
@@ -84,7 +88,9 @@ function isCorrectOption(question: Question, option: { label?: string; content: 
             >
               <span>{{ option.label || option.order }}</span>
               <p>{{ option.content }}</p>
-              <strong v-if="activity.answerVisible && isCorrectOption(currentQuestion, option)">✓</strong>
+              <strong v-if="activity.answerVisible && isCorrectOption(currentQuestion, option)">
+                <SvgIcon :src="icons.check" :size="14" />
+              </strong>
             </div>
           </div>
 
@@ -94,7 +100,7 @@ function isCorrectOption(question: Question, option: { label?: string; content: 
           </div>
 
           <div v-if="activity.answerVisible" class="answer figma-answer">
-            <strong>✓ 正确答案</strong>
+            <strong><SvgIcon :src="icons.check" />正确答案</strong>
             <p>{{ answerText(currentQuestion.answer) }}</p>
             <small v-if="currentQuestion.analysis">{{ currentQuestion.analysis }}</small>
           </div>
@@ -102,13 +108,15 @@ function isCorrectOption(question: Question, option: { label?: string; content: 
 
         <div class="activity-actions figma-actions">
           <button type="button" :disabled="activity.currentCountdownSeconds === 0" @click="activity.status === 'paused' ? emit('resume') : emit('pause')">
-            {{ activity.status === 'paused' ? '▶ 继续' : 'Ⅱ 暂停' }}
+            <SvgIcon :src="activity.status === 'paused' ? icons.play : icons.pause" />
+            {{ activity.status === 'paused' ? '继续' : '暂停' }}
           </button>
-          <button type="button" @click="emit('reset')">↻ 重置</button>
+          <button type="button" @click="emit('reset')"><SvgIcon :src="icons.rotateCcw" />重置</button>
           <span></span>
-          <button v-if="!activity.answerVisible" type="button" @click="emit('reveal')">◎ 显示答案</button>
-          <button v-else type="button" @click="emit('reveal')">◎ 隐藏答案</button>
+          <button v-if="!activity.answerVisible" type="button" @click="emit('reveal')"><SvgIcon :src="icons.eye" />显示答案</button>
+          <button v-else type="button" @click="emit('reveal')"><SvgIcon :src="icons.eyeOff" />隐藏答案</button>
           <button class="primary" type="button" @click="emit('next')">
+            <SvgIcon :src="activity.remainingQuestionIds.length ? icons.skipForward : icons.award" />
             {{ activity.remainingQuestionIds.length ? '下一题' : '完成活动' }}
           </button>
         </div>
@@ -140,7 +148,7 @@ function isCorrectOption(question: Question, option: { label?: string; content: 
 
     <div v-else class="empty activity-empty">
       <p>点击开始后，系统会从已选择且启用的题目中随机抽取。</p>
-      <button class="primary" type="button" @click="emit('start')">开始抽题</button>
+      <button class="primary" type="button" @click="emit('start')"><SvgIcon :src="icons.shuffle" />开始抽题</button>
     </div>
   </section>
 </template>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { BaseQuestionType, Project, Question } from '../types/question'
+import { icons } from '../assets/icons'
+import SvgIcon from './SvgIcon.vue'
 
 defineProps<{
   project: Project
@@ -58,7 +60,7 @@ const emit = defineEmits<{
       <button type="button" @click="emit('bulkSelect', 'none')">取消全选</button>
       <button type="button" @click="emit('bulkEnabled', true)">批量启用</button>
       <button type="button" @click="emit('bulkEnabled', false)">批量禁用</button>
-      <button class="danger" type="button" @click="emit('deleteFilteredQuestions')">批量删除</button>
+      <button class="danger" type="button" @click="emit('deleteFilteredQuestions')"><SvgIcon :src="icons.trash" />批量删除</button>
     </div>
     <div class="question-list">
       <article v-for="question in filteredQuestions" :key="question.id" class="question-card">
