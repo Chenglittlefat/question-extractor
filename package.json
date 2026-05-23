@@ -16,31 +16,35 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@electron-forge/cli": "^7.11.2",
-    "@electron-forge/maker-dmg": "^7.11.2",
-    "@electron-forge/maker-squirrel": "^7.11.2",
-    "@electron-forge/maker-zip": "^7.11.2",
-    "@types/sql.js": "^1.4.11",
-    "concurrently": "^9.2.1",
-    "sql.js": "^1.14.1",
-    "vue": "^3.5.34",
-    "wait-on": "^9.0.10",
-    "xlsx": "^0.18.5"
+    "sql.js": "^1.14.1"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^7.11.2",
+    "@electron-forge/maker-dmg": "^7.11.2",
+    "@electron-forge/maker-zip": "^7.11.2",
     "@types/node": "^24.12.3",
+    "@types/sql.js": "^1.4.11",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",
+    "concurrently": "^9.2.1",
     "electron": "^42.2.0",
     "typescript": "~6.0.2",
     "vite": "^8.0.12",
-    "vue-tsc": "^3.2.8"
+    "vue": "^3.5.34",
+    "vue-tsc": "^3.2.8",
+    "wait-on": "^9.0.10",
+    "xlsx": "^0.18.5"
   },
   "config": {
     "forge": {
       "packagerConfig": {
         "name": "QuestionExtractor",
         "executableName": "question-extractor",
+        "ignore": [
+          "^/(\\.git|\\.github|\\.idea|out|propmts|public|src)(/|$)",
+          "^/(README\\.md|tsconfig.*\\.json|vite\\.config\\.ts)$",
+          "^/node_modules/(?!sql\\.js(/|$))"
+        ],
         "asar": {
           "unpack": "**/node_modules/sql.js/dist/sql-wasm.wasm"
         }
@@ -49,14 +53,12 @@
         {
           "name": "@electron-forge/maker-zip",
           "platforms": [
-            "darwin"
+            "darwin",
+            "win32"
           ]
         },
         {
           "name": "@electron-forge/maker-dmg"
-        },
-        {
-          "name": "@electron-forge/maker-squirrel"
         }
       ]
     }
