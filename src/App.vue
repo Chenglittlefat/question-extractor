@@ -14,6 +14,7 @@ import QuestionManagePanel from './components/QuestionManagePanel.vue'
 import QuestionTypePanel from './components/QuestionTypePanel.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import FinishView from './components/FinishView.vue'
+import SvgIcon from './components/SvgIcon.vue'
 import { icons } from './assets/icons'
 import type {
   ActivityStatus,
@@ -28,6 +29,8 @@ import type {
 } from './types/question'
 
 type AppView = 'home' | 'workspace' | 'activity' | 'finish' | 'settings'
+
+const chromeMenus = ['文件', '编辑', '查看', '窗口', '帮助']
 
 const baseTypeLabels: Record<BaseQuestionType, string> = {
   single: '单选题',
@@ -888,6 +891,18 @@ function shuffle(items: string[]) {
   return result
 }
 
+function minimizeWindow() {
+  void window.questionApi?.minimizeWindow()
+}
+
+function toggleMaximizeWindow() {
+  void window.questionApi?.toggleMaximizeWindow()
+}
+
+function closeWindow() {
+  void window.questionApi?.closeWindow()
+}
+
 onBeforeUnmount(() => {
   window.clearInterval(timer)
   stopSound()
@@ -909,155 +924,191 @@ onMounted(async () => {
 </script>
 
 <template>
-  <ProjectHome
-    v-if="activeView === 'home'"
-    :projects="projects"
-    @create-project="createProject"
-    @delete-project="deleteProject"
-    @open-project="openProject"
-    @open-settings="openSettings"
-  />
+  <div class="desktop-shell">
+    <header class="chrome-titlebar">
+      <div class="chrome-left">
+        <div class="chrome-app-icon" aria-hidden="true">
+          <SvgIcon :src="icons.appLogo" />
+        </div>
+        <button class="chrome-nav" type="button" title="返回" @click="activeView === 'home' ? undefined : backHome()">
+          <SvgIcon :src="icons.arrowLeft" />
+        </button>
+        <button class="chrome-nav" type="button" title="前进" disabled>
+          <span aria-hidden="true">›</span>
+        </button>
+        <nav class="chrome-menu" aria-label="应用菜单">
+          <button v-for="menu in chromeMenus" :key="menu" type="button">{{ menu }}</button>
+        </nav>
+      </div>
 
-  <ActivityPanel
-    v-else-if="activeView === 'activity'"
-    :activity="activity"
-    :activity-progress="activityProgress"
-    :answer-text="answerText"
-    :completed-questions="completedQuestions"
-    :current-question="currentQuestion"
-    :elapsed-time="elapsedTime"
-    :format-date="formatDate"
-    :format-timer="formatTimer"
-    :selected-questions-count="selectedQuestions.length"
-    :timer-dash-offset="timerDashOffset"
-    @back="backToWorkspaceFromActivity"
-    @finish="finishActivity"
-    @next="drawNextQuestion"
-    @pause="pauseTimer"
-    @reset="resetTimer"
-    @resume="resumeTimer"
-    @reveal="revealAnswer"
-    @start="startActivity"
-  />
+      <div class="chrome-center">
+        <span>{{ project?.name || '抽题助手' }}</span>
+      </div>
 
-  <FinishView
-    v-else-if="activeView === 'finish'"
-    :answer-text="answerText"
-    :completed-questions="completedQuestions"
-    :elapsed-time="elapsedTime()"
-    :project="project"
-    @home="backHome"
-    @retry="startActivity"
-  />
-
-  <div v-else-if="activeView === 'settings'" class="settings-view">
-    <header class="figma-header">
-      <div class="header-left">
-        <button class="icon-button" type="button" @click="activeView = 'home'">←</button>
-        <strong>设置</strong>
+      <div class="chrome-window-controls">
+        <button type="button" title="最小化" @click="minimizeWindow">
+          <span aria-hidden="true" class="window-minimize"></span>
+        </button>
+        <button type="button" title="最大化" @click="toggleMaximizeWindow">
+          <span aria-hidden="true" class="window-maximize"></span>
+        </button>
+        <button class="chrome-close" type="button" title="关闭" @click="closeWindow">
+          <SvgIcon :src="icons.x" />
+        </button>
       </div>
     </header>
-    <main class="settings-main">
-      <SettingsPanel
-        :project="project"
-        @export-backup="exportBackup"
-        @import-file="handleImportFile"
-        @play-sound="playSound"
-        @sound-file="handleSoundFile"
-        @stop-sound="stopSound"
-        @touch="touchProject"
-      />
-      <p class="app-version">抽题助手 v1.0.0 · 纯离线运行 · 数据存储在本地</p>
-    </main>
-  </div>
 
-  <div v-else class="app-shell">
-    <AppSidebar
-      v-model:active-project-id="activeProjectId"
-      v-model:active-tab="activeTab"
-      :data-path="dataPath"
-      :projects="projects"
-      :tabs="tabs"
-      @create-project="createProject"
-      @project-changed="resetActivity"
-    />
-
-    <main class="workspace">
-      <AppTopbar
-        :notice="notice"
-        :project="project"
-        :selected-questions-count="selectedQuestions.length"
-        @back-home="backHome"
+    <div class="app-content">
+      <ProjectHome
+        v-if="activeView === 'home'"
+        :projects="projects"
+        @create-project="createProject"
         @delete-project="deleteProject"
-        @export-backup="exportBackup"
-        @save="touchProject()"
-        @start-activity="startActivity"
+        @open-project="openProject"
+        @open-settings="openSettings"
       />
 
-      <ProjectPanel
-        v-if="activeTab === 'project'"
-        :activity-ready-items="activityReadyItems"
-        :import-ready="importReady"
-        :project="project"
-        :selected-question-rate="selectedQuestionRate"
-        :selected-questions-count="selectedQuestions.length"
-        @touch="touchProject"
-      />
-
-      <QuestionTypePanel
-        v-if="activeTab === 'types'"
-        :base-type-labels="baseTypeLabels"
-        :project="project"
-        :type-draft="typeDraft"
-        @add-type="addType"
-        @remove-type="removeType"
-        @toggle-difficulty="toggleTypeDifficulty"
-        @touch="touchProject"
-      />
-
-      <DifficultyPanel
-        v-if="activeTab === 'difficulties'"
-        :difficulty-draft="difficultyDraft"
-        :project="project"
-        @add-difficulty="addDifficulty"
-        @move-difficulty="moveDifficulty"
-        @remove-difficulty="removeDifficulty"
-        @touch="touchProject"
-      />
-
-      <CountdownPanel
-        v-if="activeTab === 'countdown'"
-        :base-type-labels="baseTypeLabels"
-        :project="project"
-        @touch="touchProject"
-      />
-
-      <ImportPanel
-        v-if="activeTab === 'import'"
-        :import-batch="importBatch"
-        v-model:import-encoding="importEncoding"
-        :import-rows="importRows"
-        :import-valid-count="importValidCount"
-        @confirm-import="confirmImport"
-        @export-template="exportTemplate"
-        @import-file="handleImportFile"
-      />
-
-      <QuestionManagePanel
-        v-if="activeTab === 'questions'"
+      <ActivityPanel
+        v-else-if="activeView === 'activity'"
+        :activity="activity"
+        :activity-progress="activityProgress"
         :answer-text="answerText"
-        :base-type-labels="baseTypeLabels"
-        :filtered-questions="filteredQuestions"
-        :filters="filters"
-        :project="project"
-        @bulk-enabled="bulkEnabled"
-        @bulk-select="bulkSelect"
-        @delete-filtered-questions="deleteFilteredQuestions"
-        @touch="touchProject"
+        :completed-questions="completedQuestions"
+        :current-question="currentQuestion"
+        :elapsed-time="elapsedTime"
+        :format-date="formatDate"
+        :format-timer="formatTimer"
+        :selected-questions-count="selectedQuestions.length"
+        :timer-dash-offset="timerDashOffset"
+        @back="backToWorkspaceFromActivity"
+        @finish="finishActivity"
+        @next="drawNextQuestion"
+        @pause="pauseTimer"
+        @reset="resetTimer"
+        @resume="resumeTimer"
+        @reveal="revealAnswer"
+        @start="startActivity"
       />
 
-    </main>
-  </div>
+      <FinishView
+        v-else-if="activeView === 'finish'"
+        :answer-text="answerText"
+        :completed-questions="completedQuestions"
+        :elapsed-time="elapsedTime()"
+        :project="project"
+        @home="backHome"
+        @retry="startActivity"
+      />
 
-  <NewProjectModal v-if="showNewProjectModal" @close="showNewProjectModal = false" @create="confirmCreateProject" />
+      <div v-else-if="activeView === 'settings'" class="settings-view">
+        <header class="figma-header">
+          <div class="header-left">
+            <button class="icon-button" type="button" @click="activeView = 'home'">←</button>
+            <strong>设置</strong>
+          </div>
+        </header>
+        <main class="settings-main">
+          <SettingsPanel
+            :project="project"
+            @export-backup="exportBackup"
+            @import-file="handleImportFile"
+            @play-sound="playSound"
+            @sound-file="handleSoundFile"
+            @stop-sound="stopSound"
+            @touch="touchProject"
+          />
+          <p class="app-version">抽题助手 v1.0.0 · 纯离线运行 · 数据存储在本地</p>
+        </main>
+      </div>
+
+      <div v-else class="app-shell">
+        <AppSidebar
+          v-model:active-project-id="activeProjectId"
+          v-model:active-tab="activeTab"
+          :data-path="dataPath"
+          :projects="projects"
+          :tabs="tabs"
+          @create-project="createProject"
+          @project-changed="resetActivity"
+        />
+
+        <main class="workspace">
+          <AppTopbar
+            :notice="notice"
+            :project="project"
+            :selected-questions-count="selectedQuestions.length"
+            @back-home="backHome"
+            @delete-project="deleteProject"
+            @export-backup="exportBackup"
+            @save="touchProject()"
+            @start-activity="startActivity"
+          />
+
+          <ProjectPanel
+            v-if="activeTab === 'project'"
+            :activity-ready-items="activityReadyItems"
+            :import-ready="importReady"
+            :project="project"
+            :selected-question-rate="selectedQuestionRate"
+            :selected-questions-count="selectedQuestions.length"
+            @touch="touchProject"
+          />
+
+          <QuestionTypePanel
+            v-if="activeTab === 'types'"
+            :base-type-labels="baseTypeLabels"
+            :project="project"
+            :type-draft="typeDraft"
+            @add-type="addType"
+            @remove-type="removeType"
+            @toggle-difficulty="toggleTypeDifficulty"
+            @touch="touchProject"
+          />
+
+          <DifficultyPanel
+            v-if="activeTab === 'difficulties'"
+            :difficulty-draft="difficultyDraft"
+            :project="project"
+            @add-difficulty="addDifficulty"
+            @move-difficulty="moveDifficulty"
+            @remove-difficulty="removeDifficulty"
+            @touch="touchProject"
+          />
+
+          <CountdownPanel
+            v-if="activeTab === 'countdown'"
+            :base-type-labels="baseTypeLabels"
+            :project="project"
+            @touch="touchProject"
+          />
+
+          <ImportPanel
+            v-if="activeTab === 'import'"
+            :import-batch="importBatch"
+            v-model:import-encoding="importEncoding"
+            :import-rows="importRows"
+            :import-valid-count="importValidCount"
+            @confirm-import="confirmImport"
+            @export-template="exportTemplate"
+            @import-file="handleImportFile"
+          />
+
+          <QuestionManagePanel
+            v-if="activeTab === 'questions'"
+            :answer-text="answerText"
+            :base-type-labels="baseTypeLabels"
+            :filtered-questions="filteredQuestions"
+            :filters="filters"
+            :project="project"
+            @bulk-enabled="bulkEnabled"
+            @bulk-select="bulkSelect"
+            @delete-filtered-questions="deleteFilteredQuestions"
+            @touch="touchProject"
+          />
+        </main>
+      </div>
+
+      <NewProjectModal v-if="showNewProjectModal" @close="showNewProjectModal = false" @create="confirmCreateProject" />
+    </div>
+  </div>
 </template>
