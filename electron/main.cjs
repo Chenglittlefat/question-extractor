@@ -1,10 +1,26 @@
 const path = require('node:path')
-const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const fs = require('node:fs')
+const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const { SqliteStore } = require('./sqliteStore.cjs')
 
 const isDev = !app.isPackaged
+const appTitle = '抽题助手'
 let mainWindow = null
 let store = null
+
+app.setName(appTitle)
+
+function writeMainLog(error) {
+  try {
+    const message = error instanceof Error ? `${error.stack || error.message}\n` : `${String(error)}\n`
+    fs.appendFileSync(path.join(app.getPath('userData'), 'main.log'), message)
+  } catch {
+    // Logging must never be the reason startup fails.
+  }
+}
+
+process.on('uncaughtException', writeMainLog)
+process.on('unhandledRejection', writeMainLog)
 
 async function createWindow() {
   store = new SqliteStore(app.getPath('userData'))
@@ -15,7 +31,8 @@ async function createWindow() {
     height: 940,
     minWidth: 1100,
     minHeight: 760,
-    title: '抽题助手',
+    title: appTitle,
+    frame: false,
     backgroundColor: '#ffffff',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -30,9 +47,19 @@ async function createWindow() {
   } else {
     await mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'))
   }
+
+  mainWindow.setTitle(appTitle)
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(async () => {
+  Menu.setApplicationMenu(null)
+  try {
+    await createWindow()
+  } catch (error) {
+    writeMainLog(error)
+    app.quit()
+  }
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
@@ -52,6 +79,23 @@ ipcMain.handle('projects:save', (_event, projects) => {
 })
 
 ipcMain.handle('app:get-data-path', () => app.getPath('userData'))
+
+ipcMain.handle('window:minimize', () => {
+  mainWindow?.minimize()
+})
+
+ipcMain.handle('window:toggle-maximize', () => {
+  if (!mainWindow) return
+  if (mainWindow.isMaximized()) {
+    mainWindow.unmaximize()
+  } else {
+    mainWindow.maximize()
+  }
+})
+
+ipcMain.handle('window:close', () => {
+  mainWindow?.close()
+})
 
 ipcMain.handle('dialog:show-open', async (_event, options) => {
   const result = await dialog.showOpenDialog(mainWindow, options)
