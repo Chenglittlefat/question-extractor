@@ -41,6 +41,13 @@ const emit = defineEmits<{
           >
             彩色风格
           </button>
+          <button
+            type="button"
+            :class="{ active: project.themeConfig.currentTheme === 'gaussian-blur' }"
+            @click="project.themeConfig.currentTheme = 'gaussian-blur'; emit('touch', '已切换为高斯模糊风格。')"
+          >
+            高斯模糊
+          </button>
         </div>
       </div>
       <div class="setting-block">
