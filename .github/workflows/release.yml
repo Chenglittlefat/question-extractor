@@ -22,7 +22,7 @@ jobs:
         include:
           - os: windows-latest
             asset-platform: windows
-            builder-args: --win nsis --x64 --publish never
+            builder-args: --win nsis portable --x64 --publish never
             forge-platform: win32
             package-dir: QuestionExtractor-win32-x64
             offline-assets: |
