@@ -38,3 +38,7 @@ ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ npx install-electron --n
 
 - Source Han Sans SC 字体随 SIL Open Font License 1.1 分发，许可证见 `src/assets/fonts/LICENSE-SourceHanSansSC.txt`。
 - JetBrains Mono 字体随 SIL Open Font License 1.1 分发，许可证见 `src/assets/fonts/LICENSE-JetBrainsMono.txt`。
+
+## 许可证
+
+本项目代码基于 MIT License 开源，详见 `LICENSE`。第三方字体按各自许可证分发。
