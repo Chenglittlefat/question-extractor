@@ -13,7 +13,10 @@
     "start": "electron .",
     "package": "npm run build && electron-forge package",
     "make": "npm run build && electron-forge make",
-    "portable": "npm run build && electron-builder --win portable --x64",
+    "dist:win": "npm run build && electron-builder --win nsis --x64 --publish never",
+    "dist:mac": "npm run build && electron-forge make --platform=darwin --arch=x64",
+    "dist:linux": "npm run build && electron-builder --linux AppImage --x64 --publish never",
+    "portable": "npm run build && electron-builder --win portable --x64 --publish never",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -58,15 +61,50 @@
       "signAndEditExecutable": false,
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": [
             "x64"
           ]
         }
       ]
     },
+    "nsis": {
+      "artifactName": "question-extractor-v${version}-windows-x64-setup.exe",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "QuestionExtractor"
+    },
     "portable": {
       "artifactName": "question-extractor-v${version}-windows-x64-portable.exe"
+    },
+    "mac": {
+      "identity": null,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "artifactName": "question-extractor-v${version}-macos-x64.dmg"
+    },
+    "linux": {
+      "category": "Education",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "appImage": {
+      "artifactName": "question-extractor-v${version}-linux-x64.AppImage"
     }
   },
   "config": {
