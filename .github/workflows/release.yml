@@ -22,6 +22,7 @@ jobs:
         include:
           - os: windows-latest
             asset-platform: windows
+            arch: x64
             builder-args: --win nsis portable --x64 --publish never
             forge-platform: win32
             package-dir: QuestionExtractor-win32-x64
@@ -30,15 +31,26 @@ jobs:
             zip-assets: |
               release/*.zip
           - os: macos-15-intel
-            asset-platform: macos
+            asset-platform: macos-x64
+            arch: x64
             forge-platform: darwin
             package-dir: QuestionExtractor-darwin-x64
             offline-assets: |
               out/make/*.dmg
             zip-assets: |
               out/make/zip/darwin/x64/*.zip
+          - os: macos-15
+            asset-platform: macos-arm64
+            arch: arm64
+            forge-platform: darwin
+            package-dir: QuestionExtractor-darwin-arm64
+            offline-assets: |
+              out/make/*.dmg
+            zip-assets: |
+              out/make/zip/darwin/arm64/*.zip
           - os: ubuntu-latest
             asset-platform: linux
+            arch: x64
             builder-args: --linux AppImage --x64 --publish never
             forge-platform: linux
             package-dir: QuestionExtractor-linux-x64
@@ -69,11 +81,11 @@ jobs:
 
       - name: Build macOS offline and zip packages
         if: runner.os == 'macOS'
-        run: npx electron-forge make --platform=darwin --arch=x64
+        run: npx electron-forge make --platform=darwin --arch=${{ matrix.arch }}
 
       - name: Package application for zip
         if: runner.os != 'macOS'
-        run: npx electron-forge package --platform=${{ matrix.forge-platform }} --arch=x64
+        run: npx electron-forge package --platform=${{ matrix.forge-platform }} --arch=${{ matrix.arch }}
 
       - name: Archive zip package
         if: runner.os != 'Windows' && runner.os != 'macOS'
@@ -90,7 +102,7 @@ jobs:
 
           (
             cd out
-            zip -qry "../release/question-extractor-${safe_ref_name}-${{ matrix.asset-platform }}-x64.zip" "${{ matrix.package-dir }}"
+            zip -qry "../release/question-extractor-${safe_ref_name}-${{ matrix.asset-platform }}-${{ matrix.arch }}.zip" "${{ matrix.package-dir }}"
           )
 
       - name: Archive zip package
@@ -105,7 +117,7 @@ jobs:
             throw "Package directory was not found: $packageDir"
           }
 
-          Compress-Archive -Path "$packageDir\*" -DestinationPath "release\question-extractor-$safeRefName-${{ matrix.asset-platform }}-x64.zip" -Force
+          Compress-Archive -Path "$packageDir\*" -DestinationPath "release\question-extractor-$safeRefName-${{ matrix.asset-platform }}-${{ matrix.arch }}.zip" -Force
 
       - name: Upload offline package artifact
         uses: actions/upload-artifact@v4
