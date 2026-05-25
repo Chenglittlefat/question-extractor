@@ -14,6 +14,7 @@ import ProjectPanel from './components/ProjectPanel.vue'
 import QuestionManagePanel from './components/QuestionManagePanel.vue'
 import QuestionTypePanel from './components/QuestionTypePanel.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
+import VersionInfo from './components/VersionInfo.vue'
 import FinishView from './components/FinishView.vue'
 import SvgIcon from './components/SvgIcon.vue'
 import { icons } from './assets/icons'
@@ -30,7 +31,7 @@ import type {
   QuestionTypeConfig,
 } from './types/question'
 
-type AppView = 'home' | 'workspace' | 'activity' | 'finish' | 'settings' | 'help'
+type AppView = 'home' | 'workspace' | 'activity' | 'finish' | 'settings' | 'help' | 'version'
 
 const chromeMenus = ['文件', '编辑', '查看', '窗口', '帮助']
 const appPlatform = window.questionApi?.platform ?? 'web'
@@ -387,6 +388,12 @@ function handleChromeMenu(menu: string) {
 function openOperationGuide() {
   activeProjectId.value = project.value.id
   activeView.value = 'help'
+  showHelpMenu.value = false
+}
+
+function openVersionInfo() {
+  activeProjectId.value = project.value.id
+  activeView.value = 'version'
   showHelpMenu.value = false
 }
 
@@ -959,6 +966,7 @@ onMounted(async () => {
             <button type="button" @click="handleChromeMenu(menu)">{{ menu }}</button>
             <div v-if="menu === '帮助' && showHelpMenu" class="chrome-dropdown">
               <button type="button" @click="openOperationGuide">操作说明</button>
+              <button type="button" @click="openVersionInfo">版本信息</button>
             </div>
           </div>
         </nav>
@@ -1053,6 +1061,18 @@ onMounted(async () => {
         </header>
         <main class="help-main">
           <OperationGuide />
+        </main>
+      </div>
+
+      <div v-else-if="activeView === 'version'" class="help-view">
+        <header class="figma-header">
+          <div class="header-left">
+            <button class="icon-button" type="button" @click="activeView = 'home'">←</button>
+            <strong>版本信息</strong>
+          </div>
+        </header>
+        <main class="version-main">
+          <VersionInfo />
         </main>
       </div>
 

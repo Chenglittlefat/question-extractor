@@ -1793,6 +1793,7 @@ nav button.active .nav-icon {
 
 .finish-main,
 .help-main,
+.version-main,
 .settings-main {
   width: min(100%, 768px);
   margin: 0 auto;
@@ -1802,6 +1803,63 @@ nav button.active .nav-icon {
 .help-main {
   width: min(100%, 880px);
   padding-top: 48px;
+}
+
+.version-main {
+  width: min(100%, 640px);
+  padding-top: 48px;
+}
+
+.version-card {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.version-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.version-card span,
+.version-card p {
+  color: var(--muted);
+}
+
+.version-card strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.version-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.update-message {
+  font-size: 13px;
+}
+
+.update-message.is-available {
+  color: var(--success);
+}
+
+.update-message.is-error {
+  color: var(--danger);
+}
+
+.update-message.is-checking {
+  color: var(--warning);
 }
 
 .operation-guide {
