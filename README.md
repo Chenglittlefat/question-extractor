@@ -33,3 +33,8 @@ npm run make
 ```bash
 ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ npx install-electron --no
 ```
+
+## 第三方字体
+
+- Source Han Sans SC 字体随 SIL Open Font License 1.1 分发，许可证见 `src/assets/fonts/LICENSE-SourceHanSansSC.txt`。
+- JetBrains Mono 字体随 SIL Open Font License 1.1 分发，许可证见 `src/assets/fonts/LICENSE-JetBrainsMono.txt`。
