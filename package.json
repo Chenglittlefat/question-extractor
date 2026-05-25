@@ -18,6 +18,9 @@
     "dist:mac": "npm run build && electron-forge make --platform=darwin --arch=x64",
     "dist:linux": "npm run build && electron-builder --linux AppImage --x64 --publish never",
     "portable": "npm run build && electron-builder --win portable --x64 --publish never",
+    "portable:mac": "npm run portable:mac:arm64",
+    "portable:mac:arm64": "npm run build && electron-builder --mac zip --arm64 --publish never",
+    "portable:mac:x64": "npm run build && electron-builder --mac zip --x64 --publish never",
     "preview": "vite preview"
   },
   "dependencies": {
