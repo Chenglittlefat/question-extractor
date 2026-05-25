@@ -29,7 +29,7 @@ jobs:
               out/builder/*.exe
             zip-assets: |
               release/*.zip
-          - os: macos-13
+          - os: macos-15-intel
             asset-platform: macos
             forge-platform: darwin
             package-dir: QuestionExtractor-darwin-x64
