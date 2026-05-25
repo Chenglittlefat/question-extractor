@@ -247,6 +247,14 @@ h3 {
   padding-left: 10px;
 }
 
+.desktop-shell[data-platform='darwin'] .chrome-left {
+  padding-left: 82px;
+}
+
+.desktop-shell[data-platform='darwin'] .chrome-app-icon {
+  display: none;
+}
+
 .chrome-center {
   justify-content: center;
   max-width: 520px;

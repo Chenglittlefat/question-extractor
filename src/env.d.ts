@@ -21,6 +21,7 @@ interface ElectronSaveDialogReturnValue {
 }
 
 interface QuestionApi {
+  platform: NodeJS.Platform
   loadProjects: () => Promise<unknown>
   saveProjects: (projects: unknown) => Promise<{ ok: boolean }>
   getDataPath: () => Promise<string>

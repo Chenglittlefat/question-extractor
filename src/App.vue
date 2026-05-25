@@ -33,6 +33,8 @@ import type {
 type AppView = 'home' | 'workspace' | 'activity' | 'finish' | 'settings' | 'help'
 
 const chromeMenus = ['文件', '编辑', '查看', '窗口', '帮助']
+const appPlatform = window.questionApi?.platform ?? 'web'
+const isMac = appPlatform === 'darwin'
 
 const baseTypeLabels: Record<BaseQuestionType, string> = {
   single: '单选题',
@@ -940,7 +942,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="desktop-shell">
+  <div class="desktop-shell" :data-platform="appPlatform">
     <header class="chrome-titlebar">
       <div class="chrome-left">
         <div class="chrome-app-icon" aria-hidden="true">
@@ -966,7 +968,7 @@ onMounted(async () => {
         <span>{{ project?.name || '抽题助手' }}</span>
       </div>
 
-      <div class="chrome-window-controls">
+      <div v-if="!isMac" class="chrome-window-controls">
         <button type="button" title="最小化" @click="minimizeWindow">
           <span aria-hidden="true" class="window-minimize"></span>
         </button>

@@ -4,6 +4,7 @@ const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const { SqliteStore } = require('./sqliteStore.cjs')
 
 const isDev = !app.isPackaged
+const isMac = process.platform === 'darwin'
 const appTitle = '抽题助手'
 const appIconPath = path.join(__dirname, '..', 'build', 'icon.ico')
 let mainWindow = null
@@ -34,7 +35,9 @@ async function createWindow() {
     minHeight: 760,
     title: appTitle,
     icon: appIconPath,
-    frame: false,
+    frame: isMac,
+    titleBarStyle: isMac ? 'hiddenInset' : undefined,
+    trafficLightPosition: isMac ? { x: 16, y: 16 } : undefined,
     backgroundColor: '#ffffff',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),

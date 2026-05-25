@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('questionApi', {
+  platform: process.platform,
   loadProjects: () => ipcRenderer.invoke('projects:load'),
   saveProjects: (projects) => ipcRenderer.invoke('projects:save', projects),
   getDataPath: () => ipcRenderer.invoke('app:get-data-path'),
