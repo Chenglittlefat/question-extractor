@@ -24,6 +24,11 @@ const emit = defineEmits<{
       <h2>题目导入</h2>
       <p>支持 CSV/TSV 表格、UTF-8/UTF-16 文本识别和 JSON 备份恢复。</p>
     </div>
+    <div class="import-format-tip">
+      <strong>导入格式提示</strong>
+      <p>必填：题型、难度、题干、正确答案。选项可填写为多列 <code>选项1</code>、<code>选项2</code>...，超过模板列数可继续新增 <code>选项9</code>、<code>选项10</code>。</p>
+      <p>多选答案可用 <code>;</code>、<code>；</code>、<code>、</code> 或 <code>|</code> 分隔，也可填写 JSON 数组；答案可写选项内容或选项编号。</p>
+    </div>
     <div class="toolbar">
       <button class="primary" type="button" @click="emit('exportTemplate')"><SvgIcon :src="icons.download" />生成导入模板</button>
       <label class="file-button">

@@ -55,6 +55,7 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]['id']
 
+const templateOptionCount = 8
 const now = () => new Date().toISOString()
 const uid = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
@@ -486,23 +487,38 @@ function toggleTypeDifficulty(type: QuestionTypeConfig, difficultyId: string) {
 }
 
 function exportTemplate() {
-  const headers = ['题目ID', '题型', '基础题型', '难度', '题干', '选项', '正确答案', '解析', '是否启用', '标签', '备注']
-  const sampleType = enabledTypes.value[0]
+  const optionHeaders = Array.from({ length: templateOptionCount }, (_, index) => `选项${index + 1}`)
+  const headers = ['题型', '基础题型', '难度', '题干', ...optionHeaders, '正确答案', '解析', '是否启用', '标签', '备注']
+  const sampleType = enabledTypes.value.find((item) => item.baseType === 'multiple') ?? enabledTypes.value[0]
   const sampleDifficulty = enabledDifficulties.value[0]
+  const sampleOptions =
+    sampleType?.baseType === 'trueFalse'
+      ? ['正确', '错误']
+      : sampleType?.baseType === 'shortAnswer'
+        ? []
+        : ['项目保存', '随机抽题', '倒计时', '云端登录', '本地备份', '批量导入']
+  const paddedSampleOptions = Array.from({ length: templateOptionCount }, (_, index) => sampleOptions[index] ?? '')
+  const sampleAnswer =
+    sampleType?.baseType === 'multiple'
+      ? '项目保存;随机抽题;倒计时'
+      : sampleType?.baseType === 'trueFalse'
+        ? '正确'
+        : sampleType?.baseType === 'shortAnswer'
+          ? '支持离线保存题库、导入题目并随机抽题。'
+          : sampleOptions[0] ?? ''
   const rows = [
     headers,
     [
-      '',
       sampleType?.name ?? '理论单选',
       sampleType ? baseTypeLabels[sampleType.baseType] : '单选题',
       sampleDifficulty?.name ?? '简单',
       '以下哪些能力属于离线抽题软件？',
-      '["项目保存","随机抽题","倒计时","云端登录"]',
-      '项目保存;随机抽题;倒计时',
-      '本题演示 JSON 数组选项和分号答案。',
+      ...paddedSampleOptions,
+      sampleAnswer,
+      '本题演示多列选项和分号答案。',
       '是',
       '示例;培训',
-      '可删除示例行后填写正式题目',
+      '超过 8 个选项时可继续新增选项9、选项10；判断题可只填 2 个选项或留空。',
     ],
   ]
   const worksheet = XLSX.utils.aoa_to_sheet(rows)
@@ -623,6 +639,7 @@ function collectOptions(values: string[], headers: string[], optionCell: string)
   const dynamicOptions = headers
     .map((header, index) => ({ header, value: values[index]?.trim() ?? '' }))
     .filter((item) => /^选项\d+$/.test(item.header) && item.value)
+    .sort((first, second) => Number(first.header.replace('选项', '')) - Number(second.header.replace('选项', '')))
     .map((item, index) => ({ id: uid('option'), label: String(index + 1), content: item.value, order: index + 1 }))
   if (dynamicOptions.length) options = dynamicOptions
   return options
