@@ -93,16 +93,22 @@ jobs:
           set -euo pipefail
           mkdir -p release
           safe_ref_name="$(printf '%s' '${{ github.ref_name }}' | sed 's/[^A-Za-z0-9._-]/-/g')"
-          package_dir="out/${{ matrix.package-dir }}"
+          package_name="${{ matrix.package-dir }}"
+          package_dir="out/${package_name}"
 
           if [ ! -d "$package_dir" ]; then
-            echo "Package directory was not found: $package_dir" >&2
-            exit 1
+            package_dir="$(find out -maxdepth 1 -type d -name "*-${{ matrix.forge-platform }}-${{ matrix.arch }}" | head -n 1)"
+            if [ -z "$package_dir" ]; then
+              echo "Package directory was not found: out/${package_name}" >&2
+              find out -maxdepth 2 -type d >&2
+              exit 1
+            fi
+            package_name="$(basename "$package_dir")"
           fi
 
           (
             cd out
-            zip -qry "../release/question-extractor-${safe_ref_name}-${{ matrix.asset-platform }}-${{ matrix.arch }}.zip" "${{ matrix.package-dir }}"
+            zip -qry "../release/question-extractor-${safe_ref_name}-${{ matrix.asset-platform }}-${{ matrix.arch }}.zip" "$package_name"
           )
 
       - name: Archive zip package
@@ -114,7 +120,11 @@ jobs:
           $packageDir = "out\${{ matrix.package-dir }}"
 
           if (-not (Test-Path $packageDir)) {
-            throw "Package directory was not found: $packageDir"
+            $packageDir = Get-ChildItem -Path out -Directory -Filter "*-${{ matrix.forge-platform }}-${{ matrix.arch }}" | Select-Object -First 1 -ExpandProperty FullName
+            if (-not $packageDir) {
+              Get-ChildItem -Path out -Directory -Recurse | ForEach-Object { Write-Error $_.FullName }
+              throw "Package directory was not found: out\${{ matrix.package-dir }}"
+            }
           }
 
           Compress-Archive -Path "$packageDir\*" -DestinationPath "release\question-extractor-$safeRefName-${{ matrix.asset-platform }}-${{ matrix.arch }}.zip" -Force
