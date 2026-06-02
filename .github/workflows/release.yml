@@ -25,7 +25,7 @@ jobs:
             arch: x64
             builder-args: --win nsis portable --x64 --publish never
             forge-platform: win32
-            package-dir: QuestionExtractor-win32-x64
+            package-dir: builder/win-unpacked
             offline-assets: |
               out/builder/*.exe
             zip-assets: |
@@ -35,8 +35,7 @@ jobs:
             arch: x64
             forge-platform: darwin
             package-dir: QuestionExtractor-darwin-x64
-            offline-assets: |
-              out/make/*.dmg
+            offline-assets: ""
             zip-assets: |
               out/make/zip/darwin/x64/*.zip
           - os: macos-15
@@ -44,8 +43,7 @@ jobs:
             arch: arm64
             forge-platform: darwin
             package-dir: QuestionExtractor-darwin-arm64
-            offline-assets: |
-              out/make/*.dmg
+            offline-assets: ""
             zip-assets: |
               out/make/zip/darwin/arm64/*.zip
           - os: ubuntu-latest
@@ -53,7 +51,7 @@ jobs:
             arch: x64
             builder-args: --linux AppImage --x64 --publish never
             forge-platform: linux
-            package-dir: QuestionExtractor-linux-x64
+            package-dir: builder/linux-unpacked
             offline-assets: |
               out/builder/*.AppImage
             zip-assets: |
@@ -97,7 +95,7 @@ jobs:
           package_dir="out/${package_name}"
 
           if [ ! -d "$package_dir" ]; then
-            package_dir="$(find out -maxdepth 1 -type d -name "*-${{ matrix.forge-platform }}-${{ matrix.arch }}" | head -n 1)"
+            package_dir="$(find out -maxdepth 2 -type d -name "*-${{ matrix.forge-platform }}-${{ matrix.arch }}" | head -n 1)"
             if [ -z "$package_dir" ]; then
               echo "Package directory was not found: out/${package_name}" >&2
               find out -maxdepth 2 -type d >&2
@@ -107,8 +105,8 @@ jobs:
           fi
 
           (
-            cd out
-            zip -qry "../release/question-extractor-${safe_ref_name}-${{ matrix.asset-platform }}-${{ matrix.arch }}.zip" "$package_name"
+            cd "$(dirname "$package_dir")"
+            zip -qry "$GITHUB_WORKSPACE/release/question-extractor-${safe_ref_name}-${{ matrix.asset-platform }}-${{ matrix.arch }}.zip" "$(basename "$package_dir")"
           )
 
       - name: Archive zip package
@@ -120,9 +118,9 @@ jobs:
           $packageDir = "out\${{ matrix.package-dir }}"
 
           if (-not (Test-Path $packageDir)) {
-            $packageDir = Get-ChildItem -Path out -Directory -Filter "*-${{ matrix.forge-platform }}-${{ matrix.arch }}" | Select-Object -First 1 -ExpandProperty FullName
+            $packageDir = Get-ChildItem -Path out -Directory -Recurse -Filter "*-${{ matrix.forge-platform }}-${{ matrix.arch }}" | Select-Object -First 1 -ExpandProperty FullName
             if (-not $packageDir) {
-              Get-ChildItem -Path out -Directory -Recurse | ForEach-Object { Write-Error $_.FullName }
+              Get-ChildItem -Path out -Directory -Recurse | ForEach-Object { Write-Host $_.FullName }
               throw "Package directory was not found: out\${{ matrix.package-dir }}"
             }
           }
@@ -130,6 +128,7 @@ jobs:
           Compress-Archive -Path "$packageDir\*" -DestinationPath "release\question-extractor-$safeRefName-${{ matrix.asset-platform }}-${{ matrix.arch }}.zip" -Force
 
       - name: Upload offline package artifact
+        if: matrix.offline-assets != ''
         uses: actions/upload-artifact@v4
         with:
           name: question-extractor-${{ matrix.asset-platform }}-offline
