@@ -62,7 +62,7 @@ function formatDate(value: string) {
               <h2>{{ project.name }}</h2>
               <p v-if="project.description">{{ project.description }}</p>
             </div>
-            <button class="icon-danger" type="button" title="删除项目" @click.stop="pendingDeleteId = project.id">
+            <button v-if="projects.length > 1" class="icon-danger" type="button" title="删除项目" @click.stop="pendingDeleteId = project.id">
               <SvgIcon :src="icons.trash" :size="15" />
             </button>
           </div>

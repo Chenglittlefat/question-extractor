@@ -217,12 +217,14 @@ const normalizeProject = (value: unknown): Project | null => {
 }
 
 const normalizeProjects = (value: unknown): Project[] => {
-  if (!Array.isArray(value) || !value.length) return [makeProject()]
+  if (!Array.isArray(value)) return [makeProject()]
+  if (!value.length) return []
   const normalized = value.map(normalizeProject).filter((item): item is Project => Boolean(item))
   return normalized.length ? normalized : [makeProject()]
 }
 
 const projects = ref<Project[]>([makeProject()])
+const emptyProject = makeProject('', '')
 const activeProjectId = ref(projects.value[0]?.id ?? '')
 const activeTab = ref<TabId>('project')
 const activeView = ref<AppView>('home')
@@ -254,7 +256,7 @@ const activity = reactive({
   finishedAt: '',
 })
 
-const project = computed(() => projects.value.find((item) => item.id === activeProjectId.value) ?? projects.value[0])
+const project = computed(() => projects.value.find((item) => item.id === activeProjectId.value) ?? projects.value[0] ?? emptyProject)
 const enabledTypes = computed(() => project.value.questionTypes.filter((item) => item.enabled))
 const enabledDifficulties = computed(() => project.value.difficulties.filter((item) => item.enabled).sort((a, b) => a.order - b.order))
 const selectedQuestions = computed(() => project.value.questions.filter((item) => item.enabled && item.selected))
@@ -377,6 +379,10 @@ function backHome() {
 }
 
 function openSettings() {
+  if (!projects.value.length) {
+    notice.value = '请先创建项目，再进入项目设置。'
+    return
+  }
   activeProjectId.value = project.value.id
   activeView.value = 'settings'
   showHelpMenu.value = false
@@ -387,26 +393,26 @@ function handleChromeMenu(menu: string) {
 }
 
 function openOperationGuide() {
-  activeProjectId.value = project.value.id
   activeView.value = 'help'
   showHelpMenu.value = false
 }
 
 function openVersionInfo() {
-  activeProjectId.value = project.value.id
   activeView.value = 'version'
   showHelpMenu.value = false
 }
 
 function deleteProject(id: string) {
-  if (projects.value.length === 1) {
-    notice.value = '至少需要保留一个项目。'
+  if (projects.value.length <= 1) {
+    notice.value = '最后一个项目不能删除。'
     return
   }
-  if (!window.confirm('确认删除这个项目吗？此操作不可恢复。')) return
+  const existed = projects.value.some((item) => item.id === id)
+  if (!existed) return
   projects.value = projects.value.filter((item) => item.id !== id)
-  activeProjectId.value = projects.value[0]?.id ?? ''
+  activeProjectId.value = projects.value.find((item) => item.id === activeProjectId.value)?.id ?? projects.value[0]?.id ?? ''
   resetActivity()
+  notice.value = '已删除项目。'
 }
 
 function addType() {

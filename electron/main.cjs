@@ -185,7 +185,7 @@ app.on('activate', () => {
 })
 
 ipcMain.handle('projects:load', () => {
-  return store.getJson('projects', [])
+  return store.getJson('projects', null)
 })
 
 ipcMain.handle('projects:save', (_event, projects) => {
