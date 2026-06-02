@@ -37,7 +37,7 @@ jobs:
             package-dir: QuestionExtractor-darwin-x64
             offline-assets: ""
             zip-assets: |
-              release/*.zip
+              out/builder/*.zip
           - os: macos-15
             asset-platform: macos-arm64
             arch: arm64
@@ -45,7 +45,7 @@ jobs:
             package-dir: QuestionExtractor-darwin-arm64
             offline-assets: ""
             zip-assets: |
-              release/*.zip
+              out/builder/*.zip
           - os: ubuntu-latest
             asset-platform: linux
             arch: x64
@@ -88,14 +88,14 @@ jobs:
 
       - name: Build macOS offline and zip packages
         if: runner.os == 'macOS'
-        run: npx electron-forge make --platform=darwin --arch=${{ matrix.arch }}
+        run: npx electron-builder --mac zip --${{ matrix.arch }} --publish never
 
       - name: Package application for zip
         if: runner.os != 'macOS'
         run: npx electron-forge package --platform=${{ matrix.forge-platform }} --arch=${{ matrix.arch }}
 
       - name: Archive zip package
-        if: runner.os != 'Windows'
+        if: runner.os != 'Windows' && runner.os != 'macOS'
         run: |
           set -euo pipefail
           mkdir -p release
