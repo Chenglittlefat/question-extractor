@@ -678,7 +678,15 @@ function parseAnswer(input: string, baseType?: BaseQuestionType, options: Questi
     return normalizeChoiceAnswers(compactLetterAnswers ? normalized.toUpperCase().split('') : answers, options)
   }
   if (baseType === 'single') return normalizeChoiceAnswers(splitList(normalized), options)
+  if (baseType === 'trueFalse') return normalizeTrueFalseAnswer(normalized, options)
   return normalized
+}
+
+function normalizeTrueFalseAnswer(answer: string, options: QuestionOption[]) {
+  const normalized = answer.trim()
+  const letterIndex = /^[ab]$/i.test(normalized) ? normalized.toUpperCase().charCodeAt(0) - 65 : -1
+  if (letterIndex < 0) return normalized
+  return options[letterIndex]?.content ?? (letterIndex === 0 ? '正确' : '错误')
 }
 
 function normalizeChoiceAnswers(answers: string[], options: QuestionOption[]) {

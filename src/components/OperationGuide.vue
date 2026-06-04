@@ -196,7 +196,7 @@ const renderedGuide = renderMarkdown(guideMarkdown)
       </div>
       <div>
         <strong>答案匹配</strong>
-        <p>单选和多选的答案可写选项内容、数字编号或字母编号，例如 <code>1</code>、<code>A</code> 或 <code>项目保存</code>。</p>
+        <p>单选、多选和判断题的答案可写选项内容、数字编号或字母编号，例如 <code>1</code>、<code>A</code> 或 <code>项目保存</code>。</p>
       </div>
     </div>
     <div class="sample-table-wrap">
