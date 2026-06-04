@@ -115,6 +115,28 @@ const normalizeStringArray = (value: unknown) => (Array.isArray(value) ? value.f
 const normalizeTheme = (value: unknown): ThemeName =>
   ['monochrome', 'colorful', 'gaussian-blur'].includes(String(value)) ? (value as ThemeName) : 'monochrome'
 
+function optionLabel(index: number) {
+  let number = index + 1
+  let label = ''
+  while (number > 0) {
+    const remainder = (number - 1) % 26
+    label = String.fromCharCode(65 + remainder) + label
+    number = Math.floor((number - 1) / 26)
+  }
+  return label
+}
+
+function normalizeOptionLabel(label: unknown, index: number) {
+  return typeof label === 'string' && label && !/^\d+$/.test(label) ? label : optionLabel(index)
+}
+
+function normalizeStoredChoiceAnswer(answer: string, options: QuestionOption[], baseType: BaseQuestionType) {
+  if (!['single', 'multiple', 'trueFalse'].includes(baseType)) return answer
+  const normalized = answer.trim()
+  const numericIndex = /^\d+$/.test(normalized) ? Number(normalized) - 1 : -1
+  return numericIndex >= 0 ? options[numericIndex]?.label ?? normalized : normalized
+}
+
 const normalizeQuestion = (value: unknown, fallbackType: QuestionTypeConfig, fallbackDifficulty: DifficultyConfig): Question | null => {
   if (!isRecord(value)) return null
   const timestamp = now()
@@ -126,12 +148,14 @@ const normalizeQuestion = (value: unknown, fallbackType: QuestionTypeConfig, fal
     .filter(isRecord)
     .map((option, index) => ({
       id: normalizeString(option.id, uid('option')),
-      label: typeof option.label === 'string' ? option.label : undefined,
+      label: normalizeOptionLabel(option.label, index),
       content: normalizeString(option.content),
       order: typeof option.order === 'number' ? option.order : index + 1,
     }))
   const rawAnswer = value.answer
-  const answer = Array.isArray(rawAnswer) ? rawAnswer.map(String) : normalizeString(rawAnswer)
+  const answer = Array.isArray(rawAnswer)
+    ? rawAnswer.map(String).map((item) => normalizeStoredChoiceAnswer(item, options, baseType))
+    : normalizeStoredChoiceAnswer(normalizeString(rawAnswer), options, baseType)
   return {
     id: normalizeString(value.id, uid('question')),
     customTypeId: normalizeString(value.customTypeId, fallbackType.id),
@@ -506,12 +530,12 @@ function exportTemplate() {
   const paddedSampleOptions = Array.from({ length: templateOptionCount }, (_, index) => sampleOptions[index] ?? '')
   const sampleAnswer =
     sampleType?.baseType === 'multiple'
-      ? '项目保存;随机抽题;倒计时'
+      ? 'ABC'
       : sampleType?.baseType === 'trueFalse'
-        ? '正确'
+        ? 'A'
         : sampleType?.baseType === 'shortAnswer'
           ? '支持离线保存题库、导入题目并随机抽题。'
-          : sampleOptions[0] ?? ''
+          : sampleOptions.length ? 'A' : ''
   const rows = [
     headers,
     [
@@ -521,7 +545,7 @@ function exportTemplate() {
       '以下哪些能力属于离线抽题软件？',
       ...paddedSampleOptions,
       sampleAnswer,
-      '本题演示多列选项和分号答案。',
+      '本题演示多列选项和字母答案。',
       '是',
       '示例;培训',
       '超过 8 个选项时可继续新增选项9、选项10；判断题可只填 2 个选项或留空。',
@@ -607,7 +631,11 @@ function buildImportRow(values: string[], headers: string[], rowNumber: number):
   if (type && type.baseType !== 'shortAnswer' && type.baseType !== 'trueFalse' && rawOptions.length < 2) errors.push('单选/多选题至少需要 2 个选项')
   if (type?.baseType === 'single' && answers.length !== 1) errors.push('单选题只能有 1 个正确答案')
   if (type?.baseType === 'multiple' && (!Array.isArray(answer) || answer.length < 1)) errors.push('多选题至少需要 1 个正确答案')
-  if (type?.baseType === 'trueFalse' && !['正确', '错误', '是', '否', 'true', 'false'].includes(answerText(answer).toLowerCase())) errors.push('判断题答案不合法')
+  if (type?.baseType === 'trueFalse') {
+    const normalizedAnswer = answerText(answer)
+    const matchesOption = rawOptions.some((option) => option.label === normalizedAnswer || option.content === normalizedAnswer)
+    if (!matchesOption && !['正确', '错误', '是', '否', 'true', 'false'].includes(normalizedAnswer.toLowerCase())) errors.push('判断题答案不合法')
+  }
   if (type?.baseType === 'shortAnswer' && !answerText(answer)) errors.push('简答题答案不能为空')
 
   const optionTexts = rawOptions.map((item) => item.content)
@@ -646,7 +674,7 @@ function collectOptions(values: string[], headers: string[], optionCell: string)
     .map((header, index) => ({ header, value: values[index]?.trim() ?? '' }))
     .filter((item) => /^选项\d+$/.test(item.header) && item.value)
     .sort((first, second) => Number(first.header.replace('选项', '')) - Number(second.header.replace('选项', '')))
-    .map((item, index) => ({ id: uid('option'), label: String(index + 1), content: item.value, order: index + 1 }))
+    .map((item, index) => ({ id: uid('option'), label: optionLabel(index), content: item.value, order: index + 1 }))
   if (dynamicOptions.length) options = dynamicOptions
   return options
 }
@@ -656,12 +684,12 @@ function parseOptions(input: string): QuestionOption[] {
   try {
     const parsed = JSON.parse(input) as unknown
     if (Array.isArray(parsed)) {
-      return parsed.map((item, index) => ({ id: uid('option'), label: String(index + 1), content: String(item), order: index + 1 }))
+      return parsed.map((item, index) => ({ id: uid('option'), label: optionLabel(index), content: String(item), order: index + 1 }))
     }
   } catch {
     // Fall back to delimiter parsing below.
   }
-  return splitList(input).map((item, index) => ({ id: uid('option'), label: String(index + 1), content: item, order: index + 1 }))
+  return splitList(input).map((item, index) => ({ id: uid('option'), label: optionLabel(index), content: item, order: index + 1 }))
 }
 
 function parseAnswer(input: string, baseType?: BaseQuestionType, options: QuestionOption[] = []): string | string[] {
@@ -685,8 +713,10 @@ function parseAnswer(input: string, baseType?: BaseQuestionType, options: Questi
 function normalizeTrueFalseAnswer(answer: string, options: QuestionOption[]) {
   const normalized = answer.trim()
   const letterIndex = /^[ab]$/i.test(normalized) ? normalized.toUpperCase().charCodeAt(0) - 65 : -1
-  if (letterIndex < 0) return normalized
-  return options[letterIndex]?.content ?? (letterIndex === 0 ? '正确' : '错误')
+  if (letterIndex >= 0) return options[letterIndex]?.label ?? (letterIndex === 0 ? '正确' : '错误')
+  const numericIndex = /^[12]$/.test(normalized) ? Number(normalized) - 1 : -1
+  if (numericIndex >= 0) return options[numericIndex]?.label ?? (numericIndex === 0 ? '正确' : '错误')
+  return normalized
 }
 
 function normalizeChoiceAnswers(answers: string[], options: QuestionOption[]) {
@@ -697,6 +727,8 @@ function normalizeChoiceAnswer(answer: string, options: QuestionOption[]) {
   const normalized = answer.trim()
   const matchedByText = options.find((option) => option.label === normalized || option.content === normalized)
   if (matchedByText) return normalized
+  const numericIndex = /^\d+$/.test(normalized) ? Number(normalized) - 1 : -1
+  if (numericIndex >= 0) return options[numericIndex]?.label ?? normalized
   const letterIndex = /^[a-z]$/i.test(normalized) ? normalized.toUpperCase().charCodeAt(0) - 65 : -1
   const option = letterIndex >= 0 ? options[letterIndex] : undefined
   return option?.label ?? normalized

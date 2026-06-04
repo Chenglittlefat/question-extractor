@@ -27,7 +27,7 @@ const emit = defineEmits<{
     <div class="import-format-tip">
       <strong>导入格式提示</strong>
       <p>必填：题型、难度、题干、正确答案。选项可填写为多列 <code>选项1</code>、<code>选项2</code>...，超过模板列数可继续新增 <code>选项9</code>、<code>选项10</code>。</p>
-      <p>多选答案可用 <code>;</code>、<code>,</code>、<code>、</code> 或 <code>|</code> 分隔，也可填写 JSON 数组；答案可写选项内容、数字编号或 A/B/C 编号，判断题可用 A/B。</p>
+      <p>多选答案可用 <code>ABCD</code> 连写，也可用 <code>;</code>、<code>,</code>、<code>、</code> 或 <code>|</code> 分隔；答案建议写 A/B/C 编号，也兼容选项内容和数字编号。</p>
     </div>
     <div class="toolbar">
       <button class="primary" type="button" @click="emit('exportTemplate')"><SvgIcon :src="icons.download" />生成导入模板</button>

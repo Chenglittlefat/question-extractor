@@ -41,7 +41,7 @@ const importSamples = [
     '',
     '',
     'A',
-    '单选题可用数字编号、字母编号或选项内容作为答案。',
+    '单选题建议用 A/B/C/D 作为答案，也兼容数字编号或选项内容。',
     '是',
     '示例;单选',
     '单选题可以超过 4 个选项。',
@@ -78,8 +78,8 @@ const importSamples = [
     '',
     '',
     '',
-    '正确',
-    '判断题答案支持正确、错误、是、否、true、false。',
+    'A',
+    '判断题答案支持 A/B，也兼容正确、错误、是、否、true、false。',
     '是',
     '示例;判断',
     '选项1/选项2 可填，也可以留空。',
@@ -196,7 +196,7 @@ const renderedGuide = renderMarkdown(guideMarkdown)
       </div>
       <div>
         <strong>答案匹配</strong>
-        <p>单选、多选和判断题的答案可写选项内容、数字编号或字母编号，例如 <code>1</code>、<code>A</code> 或 <code>项目保存</code>。</p>
+        <p>单选、多选和判断题的答案建议写字母编号，例如 <code>A</code>、<code>ABCD</code>；也兼容选项内容和数字编号。</p>
       </div>
     </div>
     <div class="sample-table-wrap">
