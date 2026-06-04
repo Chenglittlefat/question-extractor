@@ -14,6 +14,7 @@ jobs:
     name: Build ${{ matrix.asset-platform }} app
     runs-on: ${{ matrix.os }}
     env:
+      ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
       ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
 
     strategy:
