@@ -602,7 +602,7 @@ function buildImportRow(values: string[], headers: string[], rowNumber: number):
   if (!content) errors.push('题干不能为空')
 
   const rawOptions = collectOptions(values, headers, valueOf('选项'))
-  const answer = parseAnswer(valueOf('正确答案'), type?.baseType)
+  const answer = parseAnswer(valueOf('正确答案'), type?.baseType, rawOptions)
   const answers = Array.isArray(answer) ? answer : [answer]
   if (type && type.baseType !== 'shortAnswer' && type.baseType !== 'trueFalse' && rawOptions.length < 2) errors.push('单选/多选题至少需要 2 个选项')
   if (type?.baseType === 'single' && answers.length !== 1) errors.push('单选题只能有 1 个正确答案')
@@ -664,24 +664,39 @@ function parseOptions(input: string): QuestionOption[] {
   return splitList(input).map((item, index) => ({ id: uid('option'), label: String(index + 1), content: item, order: index + 1 }))
 }
 
-function parseAnswer(input: string, baseType?: BaseQuestionType): string | string[] {
+function parseAnswer(input: string, baseType?: BaseQuestionType, options: QuestionOption[] = []): string | string[] {
   const normalized = input.trim()
   if (baseType === 'multiple') {
     try {
       const parsed = JSON.parse(normalized) as unknown
-      if (Array.isArray(parsed)) return parsed.map(String)
+      if (Array.isArray(parsed)) return normalizeChoiceAnswers(parsed.map(String), options)
     } catch {
       // Fall back to delimiter parsing below.
     }
-    return splitList(normalized)
+    const answers = splitList(normalized)
+    const compactLetterAnswers = /^[a-z]+$/i.test(normalized) && answers.length === 1 && normalized.length > 1
+    return normalizeChoiceAnswers(compactLetterAnswers ? normalized.toUpperCase().split('') : answers, options)
   }
-  if (baseType === 'single') return splitList(normalized)
+  if (baseType === 'single') return normalizeChoiceAnswers(splitList(normalized), options)
   return normalized
+}
+
+function normalizeChoiceAnswers(answers: string[], options: QuestionOption[]) {
+  return answers.map((answer) => normalizeChoiceAnswer(answer, options))
+}
+
+function normalizeChoiceAnswer(answer: string, options: QuestionOption[]) {
+  const normalized = answer.trim()
+  const matchedByText = options.find((option) => option.label === normalized || option.content === normalized)
+  if (matchedByText) return normalized
+  const letterIndex = /^[a-z]$/i.test(normalized) ? normalized.toUpperCase().charCodeAt(0) - 65 : -1
+  const option = letterIndex >= 0 ? options[letterIndex] : undefined
+  return option?.label ?? normalized
 }
 
 function splitList(value: string) {
   return value
-    .split(/[;；、|]/)
+    .split(/[;,，；、|]/)
     .map((item) => item.trim())
     .filter(Boolean)
 }

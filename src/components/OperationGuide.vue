@@ -40,8 +40,8 @@ const importSamples = [
     '',
     '',
     '',
-    '1',
-    '单选题可用选项编号或选项内容作为答案。',
+    'A',
+    '单选题可用数字编号、字母编号或选项内容作为答案。',
     '是',
     '示例;单选',
     '单选题可以超过 4 个选项。',
@@ -59,8 +59,8 @@ const importSamples = [
     '显示答案',
     '',
     '',
-    '项目保存;随机抽题;倒计时;批量导入',
-    '多选答案可用分号、顿号、竖线分隔，也可以写 JSON 数组。',
+    'ABCD',
+    '多选答案可用 ABCD 连写，也可用逗号、分号、顿号、竖线分隔。',
     '是',
     '示例;多选',
     '选项超过 8 个时可继续新增选项9、选项10。',
@@ -192,11 +192,11 @@ const renderedGuide = renderMarkdown(guideMarkdown)
       </div>
       <div>
         <strong>答案列</strong>
-        <p>单选填 1 个答案；多选用 <code>;</code>、<code>；</code>、<code>、</code> 或 <code>|</code> 分隔，也支持 JSON 数组。</p>
+        <p>单选填 1 个答案；多选用 <code>;</code>、<code>,</code>、<code>、</code> 或 <code>|</code> 分隔，也支持 JSON 数组和 <code>ABCD</code> 连写。</p>
       </div>
       <div>
         <strong>答案匹配</strong>
-        <p>单选和多选的答案可写选项内容，也可写选项编号，例如 <code>1</code> 或 <code>项目保存</code>。</p>
+        <p>单选和多选的答案可写选项内容、数字编号或字母编号，例如 <code>1</code>、<code>A</code> 或 <code>项目保存</code>。</p>
       </div>
     </div>
     <div class="sample-table-wrap">
