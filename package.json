@@ -34,7 +34,7 @@
     "@types/sql.js": "^1.4.11",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",
-    "concurrently": "^9.2.1",
+    "concurrently": "^9.2.4",
     "electron": "^42.2.0",
     "electron-builder": "^26.8.1",
     "typescript": "~6.0.2",
